@@ -1,0 +1,1236 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Vokabeltrainer</title>
+<style>
+:root{
+  --azul:#0E2440; --azul-2:#16304F; --azul-3:#21456E; --azul-0:#081627;
+  --tile:#F7F5EF; --tile-line:#D9DCE3;
+  --ink:#101820; --ink-soft:#5C6672;
+  --cobalt:#3A6FD8; --ocre:#D9A227;
+  --again:#C6503F; --hard:#B57B1E; --good:#2E7D52; --easy:#2E6BA8;
+  --acc:var(--ocre);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--azul-0);color:#EAEFF6;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  display:flex;justify-content:center}
+#app{width:100%;max-width:780px;background:var(--azul);display:flex;flex-direction:column;min-height:100%}
+@media(min-width:820px){
+  body{padding:20px 0}
+  #app{min-height:calc(100vh - 40px);border-radius:16px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.45)}
+}
+.screen{display:flex;flex-direction:column;flex:1;min-height:0}
+.bar{display:flex;align-items:center;gap:8px;padding:13px 14px;border-bottom:1px solid rgba(255,255,255,.09);flex:none}
+.bar h1{font:600 16px/1.25 inherit;margin:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ghost{background:none;border:1px solid rgba(255,255,255,.22);color:#EAEFF6;border-radius:8px;
+  padding:7px 11px;font:500 13px inherit;cursor:pointer;white-space:nowrap}
+.ghost:hover{background:rgba(255,255,255,.07)}
+.ghost:active{background:rgba(255,255,255,.12)}
+.danger{color:#F0A79A;border-color:rgba(240,167,154,.4)}
+.body{flex:1;padding:15px;overflow-y:auto}
+.lead{margin:0 0 15px;color:#A9BBD1;font-size:14px;line-height:1.5}
+.msg{background:var(--azul-2);border-left:3px solid var(--ocre);border-radius:8px;padding:11px 13px;
+  font-size:13px;line-height:1.55;color:#D7E2F0;margin:0 0 14px}
+.msg.bad{border-left-color:var(--again)}
+.note{font-size:12px;color:#7F91A8;line-height:1.55;margin:12px 0 0}
+h2.sec{font:600 12px/1 inherit;letter-spacing:.09em;text-transform:uppercase;color:#7F91A8;margin:22px 0 10px}
+h2.sec:first-child{margin-top:0}
+
+.theme{width:100%;text-align:left;background:var(--azul-2);border:1px solid rgba(255,255,255,.08);
+  border-left:5px solid var(--acc);border-radius:10px;padding:13px 14px;margin-bottom:9px;
+  color:inherit;font:inherit;cursor:pointer;display:block}
+.theme:hover{background:#1A3859}
+.theme:active{background:var(--azul-3)}
+.theme .row{display:flex;align-items:baseline;gap:8px}
+.theme .name{font-weight:600;font-size:15px;flex:1}
+.theme .due{font-size:13px;color:var(--ocre);font-variant-numeric:tabular-nums;white-space:nowrap}
+.theme .due.zero{color:#7F91A8}
+.theme .sub{font-size:12.5px;color:#8FA3BC;margin-top:3px}
+.meter{display:flex;height:5px;margin-top:9px;border-radius:3px;overflow:hidden;background:rgba(255,255,255,.1)}
+.meter i{display:block;height:100%}
+.legend{display:flex;gap:14px;font-size:12px;color:#8FA3BC;margin:2px 0 14px;flex-wrap:wrap}
+.dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
+
+.modes{display:grid;gap:9px;margin-bottom:18px}
+.mode{background:var(--azul-2);border:1px solid rgba(255,255,255,.1);border-radius:11px;padding:14px;
+  color:inherit;font:inherit;text-align:left;cursor:pointer}
+.mode:hover{background:#1A3859}
+.mode b{display:block;font-size:15px;margin-bottom:3px}
+.mode span{font-size:12.5px;color:#96AAC3;line-height:1.4}
+
+.progress{height:3px;background:rgba(255,255,255,.12);flex:none}
+.progress i{display:block;height:100%;background:var(--ocre);transition:width .3s}
+.count{font-size:13px;color:#93A7C0;font-variant-numeric:tabular-nums}
+
+.stage{flex:1;display:flex;align-items:center;justify-content:center;padding:16px;min-height:0}
+.tile{background:var(--tile);color:var(--ink);border-radius:12px;width:100%;max-width:560px;
+  min-height:210px;padding:28px 22px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.28)}
+.tile .prompt{font:400 17px/1.4 Georgia,serif;color:var(--ink-soft)}
+.tile hr{border:0;border-top:1px solid var(--tile-line);width:130px;margin:15px 0}
+.tile .answer{font:600 29px/1.25 Georgia,serif}
+.tile .front{font:600 26px/1.3 Georgia,serif}
+.tile .hint{margin-top:11px;font-size:15px;color:var(--ink-soft)}
+.tile .ex{margin-top:13px;font:italic 400 16px/1.4 Georgia,serif;color:var(--acc)}
+.tap{margin-top:18px;font-size:12px;color:#9AA4AF}
+
+.actions{padding:11px 13px 15px;border-top:1px solid rgba(255,255,255,.09);flex:none}
+.reveal{width:100%;padding:15px;border:0;border-radius:10px;background:var(--tile);color:var(--ink);
+  font:600 16px inherit;cursor:pointer}
+.grades{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.grade{border:0;border-radius:10px;padding:12px 4px;color:#fff;font:600 14px inherit;cursor:pointer;
+  display:flex;flex-direction:column;gap:3px;align-items:center}
+.grade small{font-weight:400;font-size:11px;opacity:.85}
+.grade kbd{position:absolute;opacity:0}
+.g0{background:var(--again)}.g1{background:var(--hard)}.g2{background:var(--good)}.g3{background:var(--easy)}
+
+.q{font:600 23px/1.3 Georgia,serif;text-align:center;margin:6px 0 20px}
+.qsub{text-align:center;color:#8FA3BC;font-size:13px;margin-bottom:22px}
+.opts{display:grid;gap:8px}
+.opt{background:var(--azul-2);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:14px;
+  color:inherit;font:500 15px inherit;text-align:left;cursor:pointer;display:flex;gap:10px;align-items:baseline}
+.opt:hover{background:#1A3859}
+.opt em{font-style:normal;color:#7F91A8;font-size:12px;font-variant-numeric:tabular-nums;min-width:11px}
+.opt.right{background:#1F5C3F;border-color:#2E7D52}
+.opt.wrong{background:#5E2A22;border-color:var(--again)}
+.opt.muted{opacity:.5}
+input.txt,textarea.txt{width:100%;background:#0A1B31;border:1px solid rgba(255,255,255,.22);
+  border-radius:9px;color:#EAEFF6;padding:13px;font:400 16px inherit}
+input.txt:focus,textarea.txt:focus{outline:2px solid var(--cobalt);outline-offset:1px}
+textarea.txt{min-height:150px;line-height:1.5;font-size:13px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;color:#8FA3BC;margin-bottom:5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.primary{background:var(--ocre);color:#1A1405;border:0;border-radius:10px;padding:14px 20px;
+  font:600 15px inherit;cursor:pointer;width:100%}
+.primary:hover{filter:brightness(1.06)}
+.primary.slim{width:auto}
+.primary[disabled]{opacity:.45;cursor:default;filter:none}
+.rowbtn{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.rowbtn>*{flex:1;min-width:130px}
+.verdict{margin-top:16px;padding:12px 14px;border-radius:9px;font-size:14px;line-height:1.5}
+.verdict.ok{background:#1F5C3F}
+.verdict.near{background:#6B5416}
+.verdict.no{background:#5E2A22}
+.verdict b{font-weight:600}
+
+.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;gap:10px;align-items:center;padding:11px 2px;border-bottom:1px solid rgba(255,255,255,.08)}
+.list .de{flex:1;font-size:14px}
+.list .es{flex:1;font-size:14px;color:#A9BBD1;font-family:Georgia,serif}
+.list button{background:none;border:0;color:#7F91A8;font-size:18px;cursor:pointer;padding:4px 6px}
+.list button:hover{color:#EAEFF6}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.sw{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer}
+.sw.on{border-color:#fff}
+
+.sheet{background:var(--tile);color:var(--ink);border-radius:12px;padding:18px 20px}
+.sheet h3{font:600 15px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  margin:0 0 4px;color:var(--ink)}
+.sheet p.hint{font:400 12.5px/1.5 inherit;color:var(--ink-soft);margin:0 0 14px}
+ol.cloze{margin:0;padding:0 0 0 22px;font:400 16.5px/2.1 Georgia,serif}
+ol.cloze li{margin-bottom:4px}
+ol.cloze li::marker{color:var(--ink-soft);font-size:13px}
+.cloze input{border:0;border-bottom:2px solid var(--acc);background:#EDE9DE;border-radius:4px 4px 0 0;
+  font:600 16px inherit;padding:2px 6px;color:var(--ink);max-width:100%}
+.cloze input.right{background:#CBE6D4;border-color:#2E7D52}
+.cloze input.wrong{background:#F2D2CC;border-color:var(--again);text-decoration:line-through}
+.cue{font:400 12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  color:#7A8290;margin-left:5px;white-space:nowrap}
+.sol{color:var(--good);font-weight:600;font-size:15px}
+.bank{display:flex;flex-wrap:wrap;gap:7px;margin:14px 0 4px}
+.chip{background:var(--azul-2);border:1px solid rgba(255,255,255,.16);border-radius:20px;
+  padding:7px 13px;font-size:13.5px;font-family:Georgia,serif;color:#D7E2F0}
+.done{text-align:center;padding:36px 20px}
+.done .big{font:600 44px/1 Georgia,serif;color:var(--ocre);margin-bottom:6px}
+.stats{display:flex;justify-content:center;gap:22px;margin:20px 0 24px;font-size:13px;color:#A9BBD1;flex-wrap:wrap}
+.stats b{display:block;font-size:22px;font-weight:600;color:#EAEFF6;font-variant-numeric:tabular-nums}
+.seg{display:flex;border:1px solid rgba(255,255,255,.22);border-radius:8px;overflow:hidden;flex:none}
+.seg button{background:none;border:0;color:#C6D4E6;padding:8px 11px;font:500 13px inherit;cursor:pointer}
+.seg button:hover{background:rgba(255,255,255,.07)}
+.seg button.on{background:var(--cobalt);color:#fff}
+.optrow{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.optrow span{flex:1;font-size:14px;min-width:150px}
+.kbd{font:500 11px ui-monospace,SFMono-Regular,Menlo,monospace;background:rgba(255,255,255,.12);
+  border-radius:4px;padding:2px 5px;color:#C6D4E6}
+@media (prefers-reduced-motion:no-preference){
+  .tile{animation:in .18s ease-out}@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* Startinhalt: wird nur beim allerersten Öffnen verwendet. */
+const SEED={"v":3,"courses":[{"id":"c-es","name":"Spanisch","from":"Deutsch","to":"Spanisch","color":"#D9A227","themes":[{"id":"t0","name":"Arbeit & Beruf","color":"#B45309","cards":[{"id":"s0-0","a":"die Arbeitslosigkeit / arbeitslos sein","b":"el desempleo / estar en paro","ex":"La tasa de desempleo ha bajado."},{"id":"s0-1","a":"die Arbeitszeit, der Arbeitstag","b":"la jornada laboral","ex":"Tengo una jornada laboral de ocho horas."},{"id":"s0-2","a":"die Belegschaft","b":"la plantilla","ex":"La empresa ha reducido la plantilla."},{"id":"s0-3","a":"der Tarifvertrag","b":"el convenio colectivo","ex":""},{"id":"s0-4","a":"einstellen / entlassen","b":"contratar / despedir","ex":"Lo despidieron sin previo aviso."},{"id":"s0-5","a":"krankgeschrieben sein","b":"estar de baja (por enfermedad)","ex":"Lleva dos semanas de baja."},{"id":"s0-6","a":"jemanden befördern","b":"ascender a alguien","ex":"La ascendieron a directora."},{"id":"s0-7","a":"der/die Selbstständige, Freiberufler(in)","b":"el/la autónomo/a","ex":""},{"id":"s0-8","a":"der/die Praktikant(in)","b":"el/la becario/a","ex":""},{"id":"s0-9","a":"die Überstunden","b":"las horas extras","ex":"Este mes he hecho muchas horas extras."},{"id":"s0-10","a":"die Vereinbarkeit von Beruf und Familie","b":"la conciliación laboral y familiar","ex":""},{"id":"s0-11","a":"Mobbing am Arbeitsplatz","b":"el acoso laboral","ex":""},{"id":"s0-12","a":"die Leistung, der Ertrag","b":"el rendimiento","ex":"Su rendimiento ha mejorado mucho."},{"id":"s0-13","a":"einen Beruf ausüben","b":"ejercer (una profesión)","ex":"Ejerce la abogacía desde 2010."},{"id":"s0-14","a":"prekäre Beschäftigungsverhältnisse","b":"la precariedad laboral","ex":""},{"id":"s0-15","a":"die Endabrechnung bei Vertragsende","b":"el finiquito","ex":""},{"id":"s0-16","a":"das Brutto- / Nettogehalt","b":"el sueldo bruto / neto","ex":""},{"id":"s0-17","a":"die Weiterbildung","b":"la formación continua","ex":""},{"id":"s0-18","a":"das Arbeitsumfeld, der berufliche Bereich","b":"el ámbito laboral","ex":""},{"id":"s0-19","a":"sich auf eine Stelle bewerben","b":"solicitar un puesto","ex":"Solicité el puesto la semana pasada."},{"id":"s0-20","a":"die Arbeitsstelle","b":"el puesto de trabajo","ex":"Ha conseguido un puesto de trabajo en Madrid."},{"id":"s0-21","a":"der/die Vorgesetzte, Chef(in)","b":"el/la jefe/a","ex":""},{"id":"s0-22","a":"die Frist","b":"el plazo","ex":"Hay que entregarlo dentro del plazo."},{"id":"s0-23","a":"die freie Stelle","b":"la vacante","ex":"Han publicado una vacante en el departamento."},{"id":"s0-24","a":"der unbefristete / befristete Vertrag","b":"el contrato indefinido / temporal","ex":""},{"id":"s0-25","a":"die Arbeitsbelastung","b":"la carga de trabajo","ex":"La carga de trabajo es excesiva."},{"id":"s0-26","a":"das Homeoffice, die Telearbeit","b":"el teletrabajo","ex":"Teletrabajo dos días a la semana."},{"id":"s0-27","a":"das Betriebsklima","b":"el ambiente laboral","ex":""},{"id":"s0-28","a":"die Nachtschicht","b":"el turno de noche","ex":""},{"id":"s0-29","a":"in Rente gehen / die Rente","b":"jubilarse / la jubilación","ex":"Se jubila el año que viene."},{"id":"s0-30","a":"Verantwortung übernehmen","b":"asumir responsabilidades","ex":""},{"id":"s0-31","a":"verdienen, kassieren","b":"cobrar","ex":"Cobro dos mil euros al mes."},{"id":"s0-32","a":"die Vergütung","b":"la remuneración","ex":""},{"id":"s0-33","a":"die Berufsausbildung","b":"la formación profesional","ex":""},{"id":"s0-34","a":"ein Amt bekleiden","b":"desempeñar un cargo","ex":"Desempeña el cargo de tesorera."},{"id":"s0-35","a":"die Besprechung","b":"la reunión","ex":"Tengo una reunión a las diez."}]},{"id":"t1","name":"Politik & Gesellschaft","color":"#1D4ED8","cards":[{"id":"s1-0","a":"die Wahlen","b":"los comicios / las elecciones","ex":"Los comicios se celebrarán en mayo."},{"id":"s1-1","a":"der Sitz im Parlament","b":"el escaño","ex":"El partido perdió diez escaños."},{"id":"s1-2","a":"die Umfrage","b":"la encuesta","ex":"Según las encuestas, van empatados."},{"id":"s1-3","a":"ein Gesetz verabschieden","b":"aprobar una ley","ex":"El Congreso aprobó la ley ayer."},{"id":"s1-4","a":"der Gesetzentwurf","b":"el proyecto de ley","ex":""},{"id":"s1-5","a":"die Demonstration","b":"la manifestación","ex":"Miles de personas salieron a la calle."},{"id":"s1-6","a":"der Streik / die Gewerkschaft","b":"la huelga / el sindicato","ex":""},{"id":"s1-7","a":"(ein)fordern","b":"reivindicar","ex":"Los trabajadores reivindican mejores condiciones."},{"id":"s1-8","a":"die Ungleichheit","b":"la desigualdad","ex":""},{"id":"s1-9","a":"die Lohnlücke / die Geschlechterkluft","b":"la brecha salarial / de género","ex":""},{"id":"s1-10","a":"die Bestechung / die Korruption","b":"el soborno / la corrupción","ex":""},{"id":"s1-11","a":"das Zusammenleben","b":"la convivencia","ex":"La convivencia entre vecinos es buena."},{"id":"s1-12","a":"das Rathaus, die Stadtverwaltung","b":"el ayuntamiento","ex":""},{"id":"s1-13","a":"die absolute Mehrheit","b":"la mayoría absoluta","ex":""},{"id":"s1-14","a":"der Gipfel (Treffen)","b":"la cumbre","ex":"la cumbre del clima"},{"id":"s1-15","a":"der Flüchtling / Asyl beantragen","b":"el/la refugiado/a / solicitar asilo","ex":""},{"id":"s1-16","a":"die Hassrede","b":"el discurso de odio","ex":""},{"id":"s1-17","a":"die Bürgerschaft, Staatsbürgerschaft","b":"la ciudadanía","ex":""},{"id":"s1-18","a":"das Engagement, die Verpflichtung","b":"el compromiso","ex":"Asumió el compromiso de ayudarnos."},{"id":"s1-19","a":"umstritten / die Kontroverse","b":"polémico/a / la polémica","ex":"una decisión muy polémica"},{"id":"s1-20","a":"der/die Sprecher(in) (offiziell)","b":"el/la portavoz","ex":""},{"id":"s1-21","a":"der Wahlkampf","b":"la campaña electoral","ex":""},{"id":"s1-22","a":"die Stimme / wählen","b":"el voto / votar","ex":"Voté por primera vez."},{"id":"s1-23","a":"die Stimmenthaltung","b":"la abstención","ex":"La abstención superó el 30%."},{"id":"s1-24","a":"der/die Abgeordnete","b":"el/la diputado/a","ex":""},{"id":"s1-25","a":"die Opposition","b":"la oposición","ex":""},{"id":"s1-26","a":"das Abkommen / sich einigen","b":"el pacto / pactar","ex":"Los dos partidos pactaron un gobierno."},{"id":"s1-27","a":"der Wohlfahrtsstaat","b":"el estado de bienestar","ex":""},{"id":"s1-28","a":"das Vorurteil","b":"el prejuicio","ex":"Hay que combatir los prejuicios."},{"id":"s1-29","a":"die Herausforderung","b":"el reto / el desafío","ex":"Es un reto enorme para el país."},{"id":"s1-30","a":"die Meinungsfreiheit","b":"la libertad de expresión","ex":""},{"id":"s1-31","a":"die Volksabstimmung","b":"el referéndum","ex":""},{"id":"s1-32","a":"das Ehrenamt","b":"el voluntariado","ex":"Hace voluntariado los fines de semana."},{"id":"s1-33","a":"die Nichtregierungsorganisation (NGO)","b":"la ONG","ex":""},{"id":"s1-34","a":"die digitale Kluft","b":"la brecha digital","ex":""},{"id":"s1-35","a":"die Zensur","b":"la censura","ex":""}]},{"id":"t2","name":"Wirtschaft & Finanzen","color":"#047857","cards":[{"id":"s2-0","a":"der Kredit, das Darlehen","b":"el préstamo","ex":"Pedí un préstamo al banco."},{"id":"s2-1","a":"die Hypothek","b":"la hipoteca","ex":""},{"id":"s2-2","a":"die Steuer / die Mehrwertsteuer","b":"el impuesto / el IVA","ex":""},{"id":"s2-3","a":"die Schulden / sich verschulden","b":"la deuda / endeudarse","ex":""},{"id":"s2-4","a":"die Ersparnisse / sparen","b":"los ahorros / ahorrar","ex":""},{"id":"s2-5","a":"investieren / die Investition","b":"invertir / la inversión","ex":""},{"id":"s2-6","a":"die Börse / die Aktien","b":"la bolsa / las acciones","ex":""},{"id":"s2-7","a":"der Gewinn / der Verlust","b":"el beneficio / la pérdida","ex":""},{"id":"s2-8","a":"die Rechnung","b":"la factura","ex":"Todavía no he pagado la factura de la luz."},{"id":"s2-9","a":"das Budget, der Kostenvoranschlag","b":"el presupuesto","ex":""},{"id":"s2-10","a":"Angebot und Nachfrage","b":"la oferta y la demanda","ex":""},{"id":"s2-11","a":"das Wachstum / die Rezession","b":"el crecimiento / la recesión","ex":""},{"id":"s2-12","a":"die Kaufkraft","b":"el poder adquisitivo","ex":""},{"id":"s2-13","a":"rentabel, lohnend","b":"rentable","ex":"Es un negocio muy rentable."},{"id":"s2-14","a":"die Insolvenz","b":"la quiebra","ex":"La empresa se declaró en quiebra."},{"id":"s2-15","a":"die Gehaltsabrechnung","b":"la nómina","ex":""},{"id":"s2-16","a":"das KMU (kleines/mittleres Unternehmen)","b":"la pyme","ex":""},{"id":"s2-17","a":"die Miete","b":"el alquiler","ex":"El alquiler ha subido un diez por ciento."},{"id":"s2-18","a":"der/die Aktionär(in)","b":"el/la accionista","ex":""},{"id":"s2-19","a":"die Ausgaben / die Einnahmen","b":"los gastos / los ingresos","ex":""},{"id":"s2-20","a":"der/die Steuerzahler(in)","b":"el/la contribuyente","ex":""},{"id":"s2-21","a":"die Steuererklärung","b":"la declaración de la renta","ex":"Hice la declaración de la renta en junio."},{"id":"s2-22","a":"der Zinssatz","b":"el tipo de interés","ex":"El tipo de interés ha vuelto a subir."},{"id":"s2-23","a":"die Subvention, die Förderung","b":"la subvención","ex":""},{"id":"s2-24","a":"der Umsatz","b":"la facturación","ex":"La facturación creció un 8%."},{"id":"s2-25","a":"der/die Verbraucher(in)","b":"el/la consumidor(a)","ex":""},{"id":"s2-26","a":"die Konkurrenz (auch: Zuständigkeit)","b":"la competencia","ex":"Tenemos mucha competencia en el sector."},{"id":"s2-27","a":"der Arbeitsmarkt","b":"el mercado laboral","ex":""},{"id":"s2-28","a":"die Fusion / fusionieren","b":"la fusión / fusionarse","ex":""},{"id":"s2-29","a":"die Filiale","b":"la sucursal","ex":""},{"id":"s2-30","a":"der/die Unternehmensgründer(in)","b":"el/la emprendedor(a)","ex":""},{"id":"s2-31","a":"die Rückerstattung","b":"el reembolso","ex":"Pedí el reembolso del billete."},{"id":"s2-32","a":"in Raten zahlen","b":"pagar a plazos","ex":"Lo pagué a plazos durante un año."},{"id":"s2-33","a":"das Vermögen","b":"el patrimonio","ex":""},{"id":"s2-34","a":"der Wohnraum, die Wohnung","b":"la vivienda","ex":"El precio de la vivienda es un problema."},{"id":"s2-35","a":"der Lieferant","b":"el proveedor","ex":""}]},{"id":"t3","name":"Gefühle & Charakter","color":"#BE185D","cards":[{"id":"s3-0","a":"die Nase voll haben von","b":"estar harto/a de algo","ex":"Estoy harta de esperar."},{"id":"s3-1","a":"gestresst, überfordert sein","b":"estar agobiado/a","ex":"Estoy agobiado por los exámenes."},{"id":"s3-2","a":"peinlich sein, sich genieren","b":"dar vergüenza","ex":"Me da vergüenza hablar en público."},{"id":"s3-3","a":"gerührt sein","b":"emocionarse","ex":"Me emocioné al verla."},{"id":"s3-4","a":"sich freuen auf, Vorfreude haben","b":"hacer ilusión","ex":"Me hace mucha ilusión verte."},{"id":"s3-5","a":"einen Groll hegen","b":"guardar rencor","ex":"No le guardo rencor."},{"id":"s3-6","a":"die Zuneigung / jemanden gern haben","b":"el cariño / tener cariño a alguien","ex":""},{"id":"s3-7","a":"jemanden nicht leiden können","b":"tener manía a alguien","ex":""},{"id":"s3-8","a":"dickköpfig, stur sein","b":"ser cabezota / testarudo/a","ex":""},{"id":"s3-9","a":"nett, sympathisch (ugs., Spanien)","b":"majo/a","ex":"Tu hermano es muy majo."},{"id":"s3-10","a":"herzlich, liebenswert","b":"entrañable","ex":"un recuerdo entrañable"},{"id":"s3-11","a":"sich Luft machen, sich aussprechen","b":"desahogarse","ex":"Necesito desahogarme un poco."},{"id":"s3-12","a":"aushalten, ertragen","b":"aguantar / soportar","ex":"No aguanto este ruido."},{"id":"s3-13","a":"vermissen","b":"echar de menos","ex":"Echo de menos a mi familia."},{"id":"s3-14","a":"total erschöpft sein","b":"estar hecho/a polvo","ex":""},{"id":"s3-15","a":"das Selbstwertgefühl","b":"la autoestima","ex":""},{"id":"s3-16","a":"enttäuscht / die Enttäuschung","b":"decepcionado/a / la decepción","ex":""},{"id":"s3-17","a":"fad, langweilig (Person oder Essen)","b":"soso/a","ex":""},{"id":"s3-18","a":"nervös werden","b":"ponerse nervioso/a","ex":"Me pongo nerviosa antes de un examen."},{"id":"s3-19","a":"jemandem sympathisch sein","b":"caer bien a alguien","ex":"Me cae muy bien tu amiga."},{"id":"s3-20","a":"aufmuntern, ermutigen","b":"animar a alguien","ex":"Intenté animarla un poco."},{"id":"s3-21","a":"jemandem vertrauen","b":"fiarse de alguien","ex":"No me fío de él."},{"id":"s3-22","a":"anspruchsvoll, fordernd","b":"exigente","ex":"Es un jefe muy exigente."},{"id":"s3-23","a":"geizig","b":"tacaño/a","ex":""},{"id":"s3-24","a":"nervig, anstrengend (Person)","b":"pesado/a","ex":"No seas pesado."},{"id":"s3-25","a":"geistig abwesend sein","b":"estar en las nubes","ex":""},{"id":"s3-26","a":"jähzornig sein","b":"tener mal genio","ex":""},{"id":"s3-27","a":"vortäuschen, so tun als ob","b":"fingir","ex":"Fingió estar enfermo."},{"id":"s3-28","a":"trösten","b":"consolar","ex":"Intenté consolarlo."},{"id":"s3-29","a":"bereuen","b":"arrepentirse de","ex":"Me arrepiento de lo que dije."},{"id":"s3-30","a":"sich trauen, wagen","b":"atreverse a","ex":"No me atrevo a preguntárselo."},{"id":"s3-31","a":"sich abfinden mit","b":"resignarse a","ex":""},{"id":"s3-32","a":"verständnisvoll","b":"comprensivo/a","ex":""},{"id":"s3-33","a":"die Stimmung, die Gemütslage","b":"el estado de ánimo","ex":"Está de mal estado de ánimo."},{"id":"s3-34","a":"gut / schlecht auskommen mit","b":"llevarse bien / mal con alguien","ex":"Me llevo muy bien con mis vecinos."},{"id":"s3-35","a":"der Eifer, der Ehrgeiz","b":"el afán","ex":"su afán de superación"}]},{"id":"t4","name":"Gesundheit & Körper","color":"#0E7490","cards":[{"id":"s4-0","a":"erkältet sein","b":"estar resfriado/a / constipado/a","ex":""},{"id":"s4-1","a":"Fieber haben","b":"tener fiebre","ex":""},{"id":"s4-2","a":"das Rezept (auch: Kochrezept)","b":"la receta","ex":""},{"id":"s4-3","a":"die Nebenwirkungen","b":"los efectos secundarios","ex":""},{"id":"s4-4","a":"ins Krankenhaus eingeliefert werden","b":"ingresar en el hospital","ex":""},{"id":"s4-5","a":"die Blutuntersuchung","b":"el análisis de sangre","ex":""},{"id":"s4-6","a":"schwindelig werden / der Schwindel","b":"marearse / el mareo","ex":"Me mareo en el coche."},{"id":"s4-7","a":"die Wunde / sich verletzen","b":"la herida / herirse","ex":""},{"id":"s4-8","a":"der blaue Fleck","b":"el moratón / el cardenal","ex":""},{"id":"s4-9","a":"die Verstauchung","b":"el esguince","ex":"Me hice un esguince de tobillo."},{"id":"s4-10","a":"die Verletzung (Sport)","b":"la lesión","ex":"una lesión de rodilla"},{"id":"s4-11","a":"an einer Krankheit leiden","b":"padecer una enfermedad","ex":"Padece una enfermedad rara."},{"id":"s4-12","a":"die chronische Krankheit","b":"la enfermedad crónica","ex":""},{"id":"s4-13","a":"sich impfen lassen / die Impfung","b":"vacunarse / la vacuna","ex":""},{"id":"s4-14","a":"die Arztpraxis, das Gesundheitszentrum","b":"el centro de salud / el ambulatorio","ex":""},{"id":"s4-15","a":"das öffentliche Gesundheitswesen","b":"la sanidad pública","ex":""},{"id":"s4-16","a":"abnehmen / zunehmen","b":"adelgazar / engordar","ex":""},{"id":"s4-17","a":"der Husten / husten","b":"la tos / toser","ex":""},{"id":"s4-18","a":"die Behandlung / die Operation","b":"el tratamiento / la cirugía","ex":""},{"id":"s4-19","a":"die psychische Gesundheit","b":"la salud mental","ex":""},{"id":"s4-20","a":"die Notaufnahme","b":"urgencias","ex":"Lo llevaron a urgencias."},{"id":"s4-21","a":"der Termin (mit Voranmeldung)","b":"la cita previa","ex":"Hay que pedir cita previa."},{"id":"s4-22","a":"der/die Krankenpfleger(in)","b":"el/la enfermero/a","ex":""},{"id":"s4-23","a":"das Pflaster","b":"la tirita","ex":""},{"id":"s4-24","a":"der Hustensaft / die Tablette","b":"el jarabe / la pastilla","ex":""},{"id":"s4-25","a":"die Dosis","b":"la dosis","ex":""},{"id":"s4-26","a":"der Blutdruck","b":"la tensión (arterial)","ex":"Tiene la tensión alta."},{"id":"s4-27","a":"Bettruhe halten","b":"guardar reposo","ex":"El médico le mandó guardar reposo."},{"id":"s4-28","a":"sich erholen, genesen","b":"recuperarse","ex":"Se está recuperando bien."},{"id":"s4-29","a":"anstecken / ansteckend","b":"contagiar / contagioso","ex":"No te acerques, es contagioso."},{"id":"s4-30","a":"die Diagnose","b":"el diagnóstico","ex":""},{"id":"s4-31","a":"die Allergie","b":"la alergia","ex":"Tengo alergia al polen."},{"id":"s4-32","a":"die Schlafstörung","b":"el trastorno del sueño","ex":""},{"id":"s4-33","a":"die Erschöpfung","b":"el agotamiento","ex":""},{"id":"s4-34","a":"ohnmächtig werden","b":"desmayarse","ex":"Se desmayó por el calor."},{"id":"s4-35","a":"die Verbrennung","b":"la quemadura","ex":""},{"id":"s4-36","a":"die Geburt / die Schwangerschaft","b":"el parto / el embarazo","ex":""}]},{"id":"t5","name":"Umwelt & Natur","color":"#4D7C0F","cards":[{"id":"s5-0","a":"der Klimawandel","b":"el cambio climático","ex":""},{"id":"s5-1","a":"die Erderwärmung","b":"el calentamiento global","ex":""},{"id":"s5-2","a":"die Verschmutzung","b":"la contaminación","ex":"la contaminación del aire"},{"id":"s5-3","a":"der Abfall, die Abfälle","b":"los residuos","ex":""},{"id":"s5-4","a":"das Recycling / recyceln","b":"el reciclaje / reciclar","ex":""},{"id":"s5-5","a":"die Verpackung","b":"el envase","ex":"envases de plástico"},{"id":"s5-6","a":"die erneuerbaren Energien","b":"las energías renovables","ex":""},{"id":"s5-7","a":"der Treibhauseffekt","b":"el efecto invernadero","ex":""},{"id":"s5-8","a":"die Dürre","b":"la sequía","ex":"El país sufre una sequía histórica."},{"id":"s5-9","a":"die Überschwemmung","b":"la inundación","ex":""},{"id":"s5-10","a":"der Waldbrand","b":"el incendio forestal","ex":""},{"id":"s5-11","a":"vom Aussterben bedroht","b":"en peligro de extinción","ex":"una especie en peligro de extinción"},{"id":"s5-12","a":"die nachhaltige Entwicklung","b":"el desarrollo sostenible","ex":""},{"id":"s5-13","a":"der CO2-Fußabdruck","b":"la huella de carbono","ex":""},{"id":"s5-14","a":"die Mülldeponie","b":"el vertedero","ex":""},{"id":"s5-15","a":"die Abholzung / Bäume fällen","b":"la deforestación / talar árboles","ex":""},{"id":"s5-16","a":"die Knappheit","b":"la escasez","ex":"la escasez de agua"},{"id":"s5-17","a":"schaden, beeinträchtigen","b":"perjudicar / dañar","ex":"El humo perjudica la salud."},{"id":"s5-18","a":"sensibilisieren, aufklären","b":"concienciar","ex":"Hay que concienciar a la población."},{"id":"s5-19","a":"der verantwortungsvolle Konsum","b":"el consumo responsable","ex":""},{"id":"s5-20","a":"die Umwelt","b":"el medio ambiente","ex":"Es una medida buena para el medio ambiente."},{"id":"s5-21","a":"der Müll / den Müll rausbringen","b":"la basura / tirar la basura","ex":""},{"id":"s5-22","a":"das Solarpanel","b":"la placa solar","ex":""},{"id":"s5-23","a":"die Windenergie","b":"la energía eólica","ex":""},{"id":"s5-24","a":"der fossile Brennstoff","b":"el combustible fósil","ex":""},{"id":"s5-25","a":"die Schadstoffemissionen","b":"las emisiones contaminantes","ex":""},{"id":"s5-26","a":"das Abschmelzen (Gletscher, Eis)","b":"el deshielo","ex":""},{"id":"s5-27","a":"der Meeresspiegel","b":"el nivel del mar","ex":"El nivel del mar sigue subiendo."},{"id":"s5-28","a":"die Artenvielfalt","b":"la biodiversidad","ex":""},{"id":"s5-29","a":"das Ökosystem","b":"el ecosistema","ex":""},{"id":"s5-30","a":"das Erdbeben","b":"el terremoto","ex":""},{"id":"s5-31","a":"das Unwetter, der Sturm","b":"el temporal","ex":""},{"id":"s5-32","a":"die Hitzewelle","b":"la ola de calor","ex":"Se espera una ola de calor la semana que viene."},{"id":"s5-33","a":"Einweg-, zum einmaligen Gebrauch","b":"de un solo uso","ex":"plásticos de un solo uso"},{"id":"s5-34","a":"umweltfreundlich","b":"respetuoso con el medio ambiente","ex":""},{"id":"s5-35","a":"die Ressourcen erschöpfen","b":"agotar los recursos","ex":""},{"id":"s5-36","a":"das Auslaufen, die Verklappung","b":"el vertido","ex":"un vertido de petróleo"}]},{"id":"t6","name":"Recht & Kriminalität","color":"#6D28D9","cards":[{"id":"s6-0","a":"der Prozess, die Gerichtsverhandlung","b":"el juicio","ex":""},{"id":"s6-1","a":"der/die Richter(in) / Staatsanwalt(-anwältin)","b":"el/la juez(a) / el/la fiscal","ex":""},{"id":"s6-2","a":"der/die Zeuge/Zeugin","b":"el/la testigo","ex":""},{"id":"s6-3","a":"der Beweis (auch: die Prüfung)","b":"la prueba","ex":"No hay pruebas suficientes."},{"id":"s6-4","a":"Anzeige erstatten / die Anzeige","b":"denunciar / la denuncia","ex":"Puso una denuncia en la comisaría."},{"id":"s6-5","a":"das Bußgeld","b":"la multa","ex":"Me pusieron una multa de 200 euros."},{"id":"s6-6","a":"die Straftat","b":"el delito","ex":"cometer un delito"},{"id":"s6-7","a":"der Diebstahl / der Raubüberfall","b":"el robo / el atraco","ex":""},{"id":"s6-8","a":"der Betrug / betrügen","b":"la estafa / estafar","ex":""},{"id":"s6-9","a":"schuldig / unschuldig","b":"culpable / inocente","ex":""},{"id":"s6-10","a":"verurteilen / die Strafe","b":"condenar / la condena","ex":""},{"id":"s6-11","a":"das Urteil","b":"la sentencia","ex":"El tribunal dictó sentencia."},{"id":"s6-12","a":"eine Strafe verbüßen","b":"cumplir una condena","ex":""},{"id":"s6-13","a":"die Kaution","b":"la fianza","ex":"Salió en libertad bajo fianza."},{"id":"s6-14","a":"die Entführung","b":"el secuestro","ex":""},{"id":"s6-15","a":"mutmaßlich","b":"presunto/a","ex":"el presunto autor del crimen"},{"id":"s6-16","a":"die Straflosigkeit","b":"la impunidad","ex":""},{"id":"s6-17","a":"das Gericht / der Gerichtshof","b":"el juzgado / el tribunal","ex":""},{"id":"s6-18","a":"der Verteidiger","b":"el abogado defensor","ex":""},{"id":"s6-19","a":"gegen das Gesetz verstoßen","b":"infringir la ley","ex":""},{"id":"s6-20","a":"der/die Angeklagte","b":"el/la acusado/a","ex":""},{"id":"s6-21","a":"beschuldigen","b":"acusar de","ex":"Lo acusaron de fraude."},{"id":"s6-22","a":"aussagen (vor Gericht)","b":"declarar","ex":"El testigo declaró ante el juez."},{"id":"s6-23","a":"das Verhör","b":"el interrogatorio","ex":""},{"id":"s6-24","a":"das Alibi","b":"la coartada","ex":"Tiene una coartada sólida."},{"id":"s6-25","a":"der/die Verdächtige","b":"el/la sospechoso/a","ex":""},{"id":"s6-26","a":"festnehmen / die Festnahme","b":"detener / la detención","ex":""},{"id":"s6-27","a":"die Polizeiwache","b":"la comisaría","ex":""},{"id":"s6-28","a":"der Gerichtsbeschluss","b":"la orden judicial","ex":""},{"id":"s6-29","a":"Berufung einlegen / die Berufung","b":"recurrir / el recurso","ex":"Van a recurrir la sentencia."},{"id":"s6-30","a":"die Entschädigung","b":"la indemnización","ex":""},{"id":"s6-31","a":"klagen / der Kläger","b":"demandar / el demandante","ex":""},{"id":"s6-32","a":"das Testament / erben","b":"el testamento / heredar","ex":""},{"id":"s6-33","a":"die Bewährung","b":"la libertad condicional","ex":""},{"id":"s6-34","a":"Totschlag / Mord","b":"el homicidio / el asesinato","ex":""},{"id":"s6-35","a":"Geld waschen","b":"blanquear dinero","ex":""},{"id":"s6-36","a":"die Steuerhinterziehung","b":"el fraude fiscal","ex":""},{"id":"s6-37","a":"häusliche/geschlechtsbezogene Gewalt","b":"la violencia de género","ex":""}]},{"id":"t7","name":"Konnektoren & Wendungen","color":"#A16207","cards":[{"id":"s7-0","a":"jedoch / dennoch","b":"sin embargo / no obstante","ex":""},{"id":"s7-1","a":"folglich, daher","b":"por lo tanto / por consiguiente","ex":""},{"id":"s7-2","a":"trotz / obwohl","b":"a pesar de (que)","ex":"A pesar de que llovía, salimos."},{"id":"s7-3","a":"was ... betrifft","b":"en cuanto a","ex":"En cuanto al precio, no hay problema."},{"id":"s7-4","a":"tatsächlich, in der Tat","b":"de hecho","ex":""},{"id":"s7-5","a":"hervorzuheben ist, dass","b":"cabe destacar que","ex":""},{"id":"s7-6","a":"heutzutage","b":"hoy en día","ex":""},{"id":"s7-7","a":"in dem Maße wie","b":"a medida que","ex":"A medida que crece, aprende más."},{"id":"s7-8","a":"vorausgesetzt, dass","b":"siempre y cuando (+ subj.)","ex":"Iré siempre y cuando tenga tiempo."},{"id":"s7-9","a":"sofern, solange","b":"con tal de que (+ subj.)","ex":""},{"id":"s7-10","a":"da, weil","b":"puesto que / ya que","ex":""},{"id":"s7-11","a":"letztendlich, kurz gesagt","b":"en definitiva","ex":""},{"id":"s7-12","a":"dagegen, hingegen","b":"en cambio","ex":""},{"id":"s7-13","a":"vielleicht (+ Indikativ)","b":"a lo mejor","ex":"A lo mejor viene mañana."},{"id":"s7-14","a":"für alle Fälle","b":"por si acaso","ex":"Llévate el paraguas por si acaso."},{"id":"s7-15","a":"das heißt, also","b":"o sea / es decir","ex":""},{"id":"s7-16","a":"als selbstverständlich voraussetzen","b":"dar por sentado","ex":""},{"id":"s7-17","a":"durchführen","b":"llevar a cabo","ex":"Llevaron a cabo el proyecto."},{"id":"s7-18","a":"berücksichtigen","b":"tener en cuenta","ex":"Hay que tener en cuenta el presupuesto."},{"id":"s7-19","a":"betonen, hervorheben","b":"hacer hincapié en","ex":""},{"id":"s7-20","a":"infolge von","b":"a raíz de","ex":"a raíz de la crisis"},{"id":"s7-21","a":"daher, deshalb","b":"de ahí que (+ subj.)","ex":"De ahí que sea tan caro."},{"id":"s7-22","a":"anscheinend, offenbar","b":"por lo visto / al parecer","ex":"Por lo visto, se han mudado."},{"id":"s7-23","a":"letzten Endes, schließlich","b":"al fin y al cabo","ex":""},{"id":"s7-24","a":"kurz gesagt","b":"en resumidas cuentas","ex":""},{"id":"s7-25","a":"übrigens","b":"por cierto","ex":"Por cierto, ¿has llamado a tu madre?"},{"id":"s7-26","a":"währenddessen","b":"mientras tanto","ex":""},{"id":"s7-27","a":"selbstverständlich, natürlich","b":"desde luego","ex":""},{"id":"s7-28","a":"nicht einmal","b":"ni siquiera","ex":"Ni siquiera me saludó."},{"id":"s7-29","a":"obendrein","b":"encima","ex":"Llegó tarde y encima sin avisar."},{"id":"s7-30","a":"damit (Absicht)","b":"a fin de que (+ subj.)","ex":""},{"id":"s7-31","a":"anstatt","b":"en lugar de","ex":""},{"id":"s7-32","a":"es sei denn","b":"a menos que / salvo que (+ subj.)","ex":"No iré a menos que me acompañes."},{"id":"s7-33","a":"so sehr auch","b":"por más que (+ subj.)","ex":"Por más que lo intente, no lo consigo."},{"id":"s7-34","a":"sich lohnen","b":"valer la pena","ex":"Vale la pena verlo."},{"id":"s7-35","a":"kurz davor sein zu","b":"estar a punto de","ex":"Estaba a punto de salir."},{"id":"s7-36","a":"gerade etwas getan haben","b":"acabar de + infinitivo","ex":"Acabo de llegar."},{"id":"s7-37","a":"aufhören zu / wieder tun","b":"dejar de / volver a + infinitivo","ex":"Dejé de fumar hace un año."},{"id":"s7-38","a":"einen Blick werfen auf","b":"echar un vistazo a","ex":"Échale un vistazo al informe."},{"id":"s7-39","a":"ins Fettnäpfchen treten","b":"meter la pata","ex":"Metí la pata delante de todos."}]},{"id":"t8","name":"Falsche Freunde","color":"#B91C1C","cards":[{"id":"s8-0","a":"die Verpflichtung, das Engagement","b":"el compromiso (Kompromiss = el acuerdo)","ex":""},{"id":"s8-1","a":"schwanger","b":"embarazada (peinlich berührt = avergonzado/a)","ex":""},{"id":"s8-2","a":"empfindsam, sensibel","b":"sensible (vernünftig = sensato/a)","ex":""},{"id":"s8-3","a":"der Erfolg","b":"el éxito (Ausgang = la salida)","ex":""},{"id":"s8-4","a":"lang (Länge)","b":"largo/a (groß = grande / alto)","ex":""},{"id":"s8-5","a":"streiten","b":"discutir (sachlich diskutieren = debatir)","ex":"Discutieron toda la noche."},{"id":"s8-6","a":"der/die Verwandte","b":"el/la pariente (Eltern = los padres)","ex":""},{"id":"s8-7","a":"das Klischee, der Gemeinplatz","b":"el tópico (Thema = el tema)","ex":""},{"id":"s8-8","a":"die Fabrik","b":"la fábrica (Stoff = la tela)","ex":""},{"id":"s8-9","a":"das Trinkglas","b":"el vaso (Vase = el jarrón)","ex":""},{"id":"s8-10","a":"der Brief / die Speisekarte","b":"la carta (Landkarte = el mapa)","ex":""},{"id":"s8-11","a":"das Fitnessstudio","b":"el gimnasio (Gymnasium = el instituto)","ex":""},{"id":"s8-12","a":"durchführen, verwirklichen","b":"realizar (bemerken = darse cuenta de)","ex":""},{"id":"s8-13","a":"vulgär, gewöhnlich","b":"ordinario/a (ordentlich = ordenado/a)","ex":""},{"id":"s8-14","a":"die Enttäuschung","b":"la decepción (Täuschung = el engaño)","ex":""},{"id":"s8-15","a":"unterschreiben / die Unterschrift","b":"firmar / la firma","ex":""},{"id":"s8-16","a":"der Fahrer","b":"el conductor (Schaffner = el revisor)","ex":""},{"id":"s8-17","a":"wetten","b":"apostar (sich abstützen = apoyarse)","ex":""},{"id":"s8-18","a":"das Boot / die Dose","b":"el bote (Bote = el mensajero)","ex":""},{"id":"s8-19","a":"derzeit, zurzeit","b":"actualmente (eigentlich = en realidad)","ex":""},{"id":"s8-20","a":"der Vortrag","b":"la conferencia (Konferenz = el congreso)","ex":""},{"id":"s8-21","a":"die Lektüre, das Lesen","b":"la lectura (Vorlesung = la clase)","ex":""},{"id":"s8-22","a":"das Ereignis, der Vorfall","b":"el suceso (Erfolg = el éxito)","ex":"Los sucesos ocurrieron de madrugada."},{"id":"s8-23","a":"der Ärger, der Kummer","b":"el disgusto (Ekel = el asco)","ex":"Se llevó un buen disgusto."},{"id":"s8-24","a":"die Mappe, der Ordner","b":"la carpeta (Teppich = la alfombra)","ex":""},{"id":"s8-25","a":"die Tischdecke","b":"el mantel (Mantel = el abrigo)","ex":""},{"id":"s8-26","a":"die Weile, der Moment","b":"el rato (Rat = el consejo)","ex":"Espérame un rato."},{"id":"s8-27","a":"elf (11)","b":"once (einmal = una vez)","ex":""},{"id":"s8-28","a":"die Studentenkapelle (Musikgruppe)","b":"la tuna (Thunfisch = el atún)","ex":""},{"id":"s8-29","a":"das Studium / der Lauf","b":"la carrera (Karriere = la trayectoria)","ex":"Estudia la carrera de Derecho."},{"id":"s8-30","a":"die Adresse / die Richtung / die Leitung","b":"la dirección","ex":""},{"id":"s8-31","a":"teilnehmen an, beiwohnen","b":"asistir a (helfen = ayudar)","ex":"Asistí a la conferencia."},{"id":"s8-32","a":"beabsichtigen, anstreben","b":"pretender (vorgeben = fingir)","ex":"¿Qué pretendes con eso?"},{"id":"s8-33","a":"befristet, vorübergehend","b":"eventual (eventuell = quizás)","ex":"un contrato eventual"},{"id":"s8-34","a":"die Handlung (Film, Buch)","b":"el argumento (Argument = el razonamiento)","ex":""},{"id":"s8-35","a":"die Note (Schule) / die Notiz","b":"la nota (Notiz = la nota, Noten = las notas)","ex":"Ha sacado buenas notas."}]}]}]};
+/* =========================================================================
+   Vokabeltrainer — Offline-Version
+   Eine Datei, keine Abhängigkeiten, keine Netzverbindung nötig.
+   Speichert im localStorage; läuft auch in der Claude-App (window.storage).
+   Stand lässt sich als Textblock exportieren und importieren.
+   ========================================================================= */
+
+const APP_ID="vokabeltrainer", MODEL_V=3, DAY=86400000;
+const KDECK="vt.deck.v3", KPROG="vt.prog.v3";
+const OLD_DECK="spanisch-deck-v2", OLD_PROG="spanisch-srs-v2";
+const COLORS=["#B45309","#1D4ED8","#047857","#BE185D","#0E7490","#4D7C0F","#6D28D9","#A16207","#B91C1C","#0F766E"];
+const DEFAULTS={dir:"a-b",newPerDay:15,srsFromExercises:true};
+
+let deck=null;
+let S={v:MODEL_V,dir:DEFAULTS.dir,newPerDay:DEFAULTS.newPerDay,srsFromExercises:DEFAULTS.srsFromExercises,
+       cards:{},day:"",newDone:0,lastCourse:""};
+let view={name:"home"}, sess=null, storageNote="";
+const app=document.getElementById("app");
+
+/* ---------- kleine Helfer ---------- */
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const str=s=>typeof s==="string"?s.trim():(s==null?"":String(s).trim());
+const today=()=>new Date().toISOString().slice(0,10);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const nid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+/* Klammerzusätze wegwerfen: "el compromiso (Kompromiss = el acuerdo)" -> "el compromiso" */
+const bare=s=>String(s).replace(/\s*\([^)]*\)\s*/g," ").trim();
+
+/* Längentreue Faltung: gleiche Zeichenzahl wie das Original, damit Indizes passen. */
+const FOLD={"á":"a","à":"a","ä":"a","â":"a","ã":"a","å":"a","é":"e","è":"e","ë":"e","ê":"e",
+  "í":"i","ì":"i","ï":"i","î":"i","ó":"o","ò":"o","ö":"o","ô":"o","õ":"o","ú":"u","ù":"u","ü":"u","û":"u",
+  "ñ":"n","ç":"c","ý":"y","ÿ":"y","š":"s","ž":"z","ø":"o","å":"a","ą":"a","ę":"e","ł":"l","ń":"n","ś":"s","ż":"z","ź":"z","č":"c","ř":"r","ě":"e","ů":"u","ğ":"g","ı":"i","ş":"s"};
+const fold1=s=>String(s).toLowerCase().replace(/[^\x00-\x7f]/g,c=>FOLD[c]||c);
+/* Vergleichsform: Akzente, Satzzeichen und Mehrfach-Leerzeichen weg. */
+const norm=s=>String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+  .replace(/[¿?¡!.,;:„“"'()\[\]]/g,"").replace(/\s+/g," ").trim();
+const ARTS=/^(el|la|los|las|un|una|unos|unas|der|die|das|den|dem|ein|eine|einen|einem|einer|the|a|an|le|les|il|lo|gli|o|os|as)\s+/;
+const dropArt=s=>String(s).replace(ARTS,"");
+
+function dist(a,b){ /* Levenshtein, für Tippfehler-Toleranz */
+  if(Math.abs(a.length-b.length)>2)return 9;
+  const m=a.length,n=b.length,dp=[];
+  for(let j=0;j<=n;j++)dp[j]=j;
+  for(let i=1;i<=m;i++){let prev=dp[0];dp[0]=i;
+    for(let j=1;j<=n;j++){const t=dp[j];
+      dp[j]=Math.min(dp[j]+1,dp[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=t;}}
+  return dp[n];
+}
+/* "yes" | "near" (Tippfehler) | "no" */
+function check(input,answer){
+  const i=norm(input); if(!i)return "no";
+  const cand=[];
+  bare(answer).split("/").forEach(x=>{const n=norm(x);if(n){cand.push(n);cand.push(dropArt(n));}});
+  const mine=[i,dropArt(i)];
+  if(cand.some(c=>mine.indexOf(c)>=0))return "yes";
+  if(cand.some(c=>c.length>=5&&mine.some(m=>dist(c,m)<=1)))return "near";
+  return "no";
+}
+
+/* ---------- Speicher: Claude-Runtime oder localStorage ---------- */
+const cloud=(typeof window.storage==="object"&&window.storage&&typeof window.storage.get==="function")?window.storage:null;
+const store={
+  async get(k){
+    try{
+      if(cloud){const r=await cloud.get(k);return r&&r.value!=null?r.value:null;}
+      return localStorage.getItem(k);
+    }catch(e){return null}
+  },
+  async set(k,v){
+    if(cloud){await cloud.set(k,v);return}
+    localStorage.setItem(k,v);
+  }
+};
+let pt=null;
+function saveProg(now){
+  clearTimeout(pt);
+  const go=async()=>{try{await store.set(KPROG,JSON.stringify(S));storageNote=""}
+    catch(e){storageNote="Speichern klappt gerade nicht — Änderungen gelten nur für diese Sitzung.";}};
+  if(now)return go(); pt=setTimeout(go,1000);
+}
+async function saveDeck(){
+  try{await store.set(KDECK,JSON.stringify(deck));storageNote=""}
+  catch(e){storageNote="Speichern klappt gerade nicht — Änderungen gelten nur für diese Sitzung.";render()}
+}
+
+/* ---------- Datenmodell: Kurs > Thema > Vokabel ---------- */
+function normCard(c){
+  if(!c||typeof c!=="object")return null;
+  const a=str(c.a!=null?c.a:c.de), b=str(c.b!=null?c.b:c.es);
+  if(!a||!b)return null;
+  return {id:String(c.id||nid("v")),a,b,ex:str(c.ex!=null?c.ex:c.example)};
+}
+function normTheme(t,i){
+  if(!t||typeof t!=="object")return null;
+  const cards=(Array.isArray(t.cards)?t.cards:[]).map(normCard).filter(Boolean);
+  return {id:String(t.id||nid("t")),name:str(t.name)||"Thema "+(i+1),
+    color:str(t.color)||COLORS[i%COLORS.length],cards};
+}
+function normCourse(c,i){
+  if(!c||typeof c!=="object")return null;
+  const themes=(Array.isArray(c.themes)?c.themes:[]).map(normTheme).filter(Boolean);
+  const name=str(c.name)||"Kurs "+(i+1);
+  const out={id:String(c.id||nid("k")),name,
+    from:str(c.from!=null?c.from:c.langA)||"Deutsch",
+    to:str(c.to!=null?c.to:c.langB)||name,
+    color:str(c.color)||COLORS[i%COLORS.length],themes};
+  if(c.dir==="a-b"||c.dir==="b-a"||c.dir==="mix")out.dir=c.dir;
+  else if(c.dir==="de-es")out.dir="a-b"; else if(c.dir==="es-de")out.dir="b-a";
+  return out;
+}
+/* Nimmt v3-Decks, alte Spanisch-Decks ({themes:[{de,es}]}) und blanke Theme-Listen. */
+function normalizeDeck(raw){
+  if(!raw||typeof raw!=="object")return null;
+  let src=null;
+  if(Array.isArray(raw.courses))src=raw.courses;
+  else if(Array.isArray(raw.themes))src=[{id:"c-es",name:"Spanisch",from:"Deutsch",to:"Spanisch",color:"#D9A227",themes:raw.themes,dir:raw.dir}];
+  else if(Array.isArray(raw))src=[{id:"c-es",name:"Spanisch",from:"Deutsch",to:"Spanisch",color:"#D9A227",themes:raw}];
+  if(!src)return null;
+  const courses=src.map(normCourse).filter(Boolean);
+  return courses.length?{v:MODEL_V,courses}:null;
+}
+function normalizeProg(raw){
+  if(!raw||typeof raw!=="object")return null;
+  const dirMap={"de-es":"a-b","es-de":"b-a","a-b":"a-b","b-a":"b-a","mix":"mix"};
+  const cards={};
+  const src=(raw.cards&&typeof raw.cards==="object"&&!Array.isArray(raw.cards))?raw.cards:{};
+  Object.keys(src).forEach(k=>{
+    const s=src[k]; if(!s||typeof s!=="object")return;
+    cards[k]={ef:+s.ef||2.5,iv:+s.iv||0,reps:+s.reps||0,lapses:+s.lapses||0,due:+s.due||0};
+  });
+  return {dir:dirMap[raw.dir]||DEFAULTS.dir,
+    newPerDay:+raw.newPerDay>0?+raw.newPerDay:DEFAULTS.newPerDay,
+    srsFromExercises:raw.srsFromExercises!==false,
+    day:str(raw.day),newDone:+raw.newDone||0,lastCourse:str(raw.lastCourse),cards};
+}
+
+/* ---------- Zugriff ---------- */
+const courseById=id=>deck.courses.find(c=>c.id===id)||null;
+function themeById(cid,tid){const c=courseById(cid);return c?c.themes.find(t=>t.id===tid)||null:null;}
+const dirOf=c=>(c&&c.dir)||S.dir;
+function cardsOf(cid,tid){
+  const out=[];
+  (cid?[courseById(cid)]:deck.courses).forEach(c=>{
+    if(!c)return;
+    (tid?[c.themes.find(t=>t.id===tid)]:c.themes).forEach(t=>{
+      if(!t)return;
+      t.cards.forEach(k=>out.push({id:k.id,a:k.a,b:k.b,ex:k.ex,acc:t.color,theme:t.name,tid:t.id,cid:c.id}));
+    });
+  });
+  return out;
+}
+const st=id=>S.cards[id];
+const isDue=id=>{const s=st(id);return !!s&&s.due<=Date.now()};
+function stats(cid,tid){
+  const cs=cardsOf(cid,tid);let neu=0,lern=0,sicher=0,due=0;
+  cs.forEach(c=>{const s=st(c.id);
+    if(!s)neu++;else if(s.iv>=21)sicher++;else lern++;
+    if(s&&s.due<=Date.now())due++;});
+  return {neu,lern,sicher,due,total:cs.length};
+}
+function allCardIds(){const m=new Map();deck.courses.forEach(c=>c.themes.forEach(t=>t.cards.forEach(k=>m.set(k.id,k))));return m;}
+
+/* ---------- Wiederholungsplan (SM-2, vereinfacht) ---------- */
+function preview(s,g){
+  const e=s?s.ef:2.5, iv=s?s.iv:0;
+  if(g===0)return 0;
+  if(g===1)return iv?Math.max(1,Math.round(iv*1.2)):1;
+  if(g===2)return iv?Math.round(iv*e):1;
+  return iv?Math.round(iv*e*1.3):3;
+}
+const label=d=>d===0?"gleich":d===1?"1 Tag":d<30?d+" Tage":(Math.round(d/30)===1?"1 Monat":Math.round(d/30)+" Monate");
+function apply(cardId,g){
+  const prev=S.cards[cardId];
+  const s=prev||{ef:2.5,iv:0,reps:0,lapses:0,due:0};
+  if(!prev)S.newDone++;
+  if(g===0){s.ef=Math.max(1.3,s.ef-0.2);s.lapses++;}
+  if(g===1)s.ef=Math.max(1.3,s.ef-0.15);
+  if(g===3)s.ef=Math.min(3,s.ef+0.15);
+  s.iv=preview(prev,g);s.reps++;
+  s.due=Date.now()+(s.iv?s.iv*DAY:0);
+  S.cards[cardId]=s;saveProg();
+}
+
+/* ---------- Runden ---------- */
+function startCards(cid,tid){
+  const pool=cardsOf(cid,tid);
+  const due=pool.filter(c=>isDue(c.id)).sort((a,b)=>st(a.id).due-st(b.id).due);
+  const fresh=pool.filter(c=>!st(c.id)).slice(0,Math.max(0,S.newPerDay-S.newDone));
+  let q=[],extra=false;
+  for(let i=0;i<Math.max(due.length,fresh.length);i++){if(due[i])q.push(due[i]);if(fresh[i])q.push(fresh[i]);}
+  if(!q.length){
+    q=pool.filter(c=>st(c.id)).sort((a,b)=>st(a.id).due-st(b.id).due).slice(0,20);extra=true;
+    if(!q.length){
+      view={name:tid?"theme":"course",cid,tid,
+        msg:"Hier ist für heute alles erledigt. In den Einstellungen kannst du mehr neue Karten pro Tag freigeben."};
+      return render();
+    }
+  }
+  sess={mode:"cards",queue:q,total:q.length,answered:0,done:0,again:0,shown:false,cid,tid,extra,dir:null};
+  view={name:"study"};render();
+}
+function startExercise(cid,tid){
+  const pool=cardsOf(cid,tid);
+  if(pool.length<2){
+    view={name:"theme",cid,tid,msg:"Für Übungen brauchst du mindestens zwei Vokabeln in diesem Thema."};
+    return render();
+  }
+  const weak=pool.filter(c=>{const s=st(c.id);return !s||s.due<=Date.now()||s.iv<7});
+  const base=shuffle(weak.length>=8?weak:pool).slice(0,10);
+  sess={mode:"ex",queue:base,total:base.length,i:0,right:0,pool,cid,tid,phase:"ask"};
+  nextQ();view={name:"exercise"};render();
+}
+function nextQ(){
+  const c=sess.queue[sess.i];if(!c)return;
+  const set=dirOf(courseById(sess.cid||c.cid));
+  const dir=set==="mix"?(Math.random()<.5?"a-b":"b-a"):set;
+  const type=(sess.pool.length>=4&&sess.i%2===0)?"mc":"type";
+  let opts=null;
+  if(type==="mc"){
+    const others=shuffle(sess.pool.filter(x=>x.id!==c.id)).slice(0,3);
+    opts=shuffle([c].concat(others)).map(x=>({id:x.id,txt:dir==="a-b"?bare(x.b):bare(x.a)}));
+  }
+  sess.q={card:c,dir,type,opts,picked:null,input:"",ok:null};
+  sess.phase="ask";
+}
+function answerEx(res){
+  sess.q.ok=res;sess.phase="feedback";
+  if(res!=="no")sess.right++;
+  if(S.srsFromExercises)apply(sess.q.card.id,res==="yes"?2:res==="near"?1:0);
+  render();
+}
+
+/* ---------- Lückentext, offline aus den Beispielsätzen ---------- */
+function findForm(card){
+  const sent=card.ex;if(!sent)return null;
+  const f=fold1(sent);
+  const terms=bare(card.b).split("/").map(x=>x.trim()).filter(Boolean);
+  const isLetter=ch=>/[\p{L}\p{M}]/u.test(ch);
+  for(let t=0;t<terms.length;t++){
+    const full=dropArt(fold1(terms[t])).trim();
+    if(full.length<3)continue;
+    let i=f.indexOf(full);
+    if(i>=0)return {i,len:full.length};
+    const words=full.split(/\s+/).filter(w=>w.length>3).sort((a,b)=>b.length-a.length);
+    for(let w=0;w<words.length;w++){
+      const stem=words[w].slice(0,Math.max(4,words[w].length-2));
+      i=f.indexOf(stem);
+      if(i<0)continue;
+      let s=i;while(s>0&&isLetter(sent[s-1]))s--;
+      let e=i+stem.length;while(e<sent.length&&isLetter(sent[e]))e++;
+      return {i:s,len:e-s};
+    }
+  }
+  return null;
+}
+function buildCloze(cid,tid){
+  const pool=cardsOf(cid,tid).filter(c=>c.ex&&c.ex.trim().length>6);
+  const usable=[];
+  pool.forEach(c=>{const hit=findForm(c);if(hit)usable.push({c,hit});});
+  if(usable.length<3)
+    return {error:"Für einen Lückentext brauche ich mindestens drei Vokabeln mit Beispielsatz in diesem Thema. "+
+      "Trag bei ein paar Vokabeln einen Beispielsatz ein — der Satz muss das Wort enthalten."};
+  const pick=shuffle(usable).slice(0,6);
+  const gaps=pick.map((u,n)=>{
+    const s=u.c.ex, hit=u.hit;
+    return {n:n+1,pre:s.slice(0,hit.i),post:s.slice(hit.i+hit.len),
+      answer:s.substr(hit.i,hit.len),hint:bare(u.c.a),cardId:u.c.id};
+  });
+  return {gaps};
+}
+
+/* ---------- Export / Import ---------- */
+function progSnapshot(){
+  return {dir:S.dir,newPerDay:S.newPerDay,srsFromExercises:S.srsFromExercises,
+    day:S.day,newDone:S.newDone,lastCourse:S.lastCourse,cards:S.cards};
+}
+function buildExport(withProgress,pretty){
+  const o={app:APP_ID,format:1,v:MODEL_V,at:new Date().toISOString(),deck:deck};
+  if(withProgress)o.progress=progSnapshot();
+  return JSON.stringify(o,null,pretty?1:0);
+}
+function parseBlock(text){
+  const t=String(text||"").trim();
+  if(!t)throw new Error("Der Textblock ist leer.");
+  let raw=null;
+  try{raw=JSON.parse(t)}
+  catch(e){
+    const s=t.indexOf("{"),e2=t.lastIndexOf("}");
+    if(s<0||e2<=s)throw new Error("Das ist kein gültiger Datenblock (JSON erwartet).");
+    try{raw=JSON.parse(t.slice(s,e2+1))}
+    catch(e3){throw new Error("Der Block ist beschädigt — vermutlich beim Kopieren abgeschnitten.")}
+  }
+  if(!raw||typeof raw!=="object")throw new Error("Das ist kein gültiger Datenblock.");
+  const deckSrc=raw.deck||(raw.courses||raw.themes?raw:(Array.isArray(raw)?raw:null));
+  const progSrc=raw.progress||(raw.cards&&typeof raw.cards==="object"&&!Array.isArray(raw.cards)?raw:null);
+  const d=deckSrc?normalizeDeck(deckSrc):null;
+  const p=progSrc?normalizeProg(progSrc):null;
+  if(!d&&!p)throw new Error("In diesem Block stecken weder Vokabeln noch ein Lernstand.");
+  let cards=0;
+  if(d)d.courses.forEach(c=>c.themes.forEach(t=>cards+=t.cards.length));
+  return {deck:d,prog:p,at:str(raw.at||raw.exportedAt),
+    sum:{courses:d?d.courses.length:0,cards,states:p?Object.keys(p.cards).length:0}};
+}
+const eqName=(a,b)=>norm(a)===norm(b)&&norm(a)!=="";
+const samePair=(x,y)=>norm(x.a)===norm(y.a)&&norm(x.b)===norm(y.b);
+function applyImport(parsed,mode){
+  const r={courses:0,themes:0,cards:0,states:0,skipped:0};
+  if(mode==="replace"){
+    if(parsed.deck)deck=parsed.deck;
+    if(parsed.prog){
+      S.cards=parsed.prog.cards;S.dir=parsed.prog.dir;S.newPerDay=parsed.prog.newPerDay;
+      S.srsFromExercises=parsed.prog.srsFromExercises;
+      S.day=parsed.prog.day||today();S.newDone=parsed.prog.newDone;
+      if(S.day!==today()){S.day=today();S.newDone=0;}
+      r.states=Object.keys(S.cards).length;
+    }
+    if(parsed.deck){parsed.deck.courses.forEach(c=>{r.courses++;c.themes.forEach(t=>{r.themes++;r.cards+=t.cards.length})});}
+    S.lastCourse="";
+    return r;
+  }
+  /* Zusammenführen: nichts Lokales geht verloren. */
+  const remap={};
+  let idx=allCardIds();
+  if(parsed.deck)parsed.deck.courses.forEach(ic=>{
+    let lc=deck.courses.find(c=>c.id===ic.id)||deck.courses.find(c=>eqName(c.name,ic.name));
+    if(!lc){lc={id:deck.courses.some(c=>c.id===ic.id)?nid("k"):ic.id,name:ic.name,from:ic.from,to:ic.to,
+      color:ic.color,themes:[]};if(ic.dir)lc.dir=ic.dir;deck.courses.push(lc);r.courses++;}
+    ic.themes.forEach(it=>{
+      let lt=lc.themes.find(t=>t.id===it.id)||lc.themes.find(t=>eqName(t.name,it.name));
+      if(!lt){lt={id:lc.themes.some(t=>t.id===it.id)?nid("t"):it.id,name:it.name,color:it.color,cards:[]};
+        lc.themes.push(lt);r.themes++;}
+      it.cards.forEach(ic2=>{
+        let target=idx.get(ic2.id)||null;
+        if(!target)target=lt.cards.find(x=>samePair(x,ic2))||null;
+        if(target){
+          remap[ic2.id]=target.id;
+          if(!target.ex&&ic2.ex)target.ex=ic2.ex;
+        }else{
+          const id=idx.has(ic2.id)?nid("v"):ic2.id;
+          const nc={id,a:ic2.a,b:ic2.b,ex:ic2.ex};
+          lt.cards.push(nc);idx.set(id,nc);remap[ic2.id]=id;r.cards++;
+        }
+      });
+    });
+  });
+  if(parsed.prog){
+    idx=allCardIds();
+    const better=(x,y)=>(x.reps||0)!==(y.reps||0)?(x.reps||0)>(y.reps||0):(x.due||0)>(y.due||0);
+    Object.keys(parsed.prog.cards).forEach(k=>{
+      const id=remap[k]||k;
+      if(!idx.has(id)){r.skipped++;return}
+      const inc=parsed.prog.cards[k],cur=S.cards[id];
+      if(!cur||better(inc,cur)){S.cards[id]=inc;r.states++;}
+    });
+    if(parsed.prog.day===today())S.newDone=Math.max(S.newDone,parsed.prog.newDone);
+  }
+  return r;
+}
+
+/* ==================== Ansichten ==================== */
+const A=(act,arg,arg2)=>`data-act="${act}"${arg!=null?` data-a="${esc(arg)}"`:""}${arg2!=null?` data-b="${esc(arg2)}"`:""}`;
+/* Eingaben ueberleben ein Neuzeichnen (z. B. Farbwahl) */
+const FORM_FIELDS=["f-a","f-b","f-ex","f-name","f-cname","f-from","f-to","f-bulk"];
+function keepForm(){
+  const d={};let any=false;
+  FORM_FIELDS.forEach(id=>{const e=document.getElementById(id);if(e){d[id]=e.value;any=true}});
+  if(any)view.draft=d;
+}
+const fv=(id,fallback)=>(view.draft&&view.draft[id]!=null)?view.draft[id]:fallback;
+const banner=()=>(view.msg?`<p class="msg ${view.bad?"bad":""}">${esc(view.msg)}</p>`:"")
+  +(storageNote?`<p class="msg bad">${esc(storageNote)}</p>`:"");
+
+/* --- Kursübersicht --- */
+function home(){
+  const rows=deck.courses.map((c,i)=>{
+    const s=stats(c.id);const w=x=>(s.total?x/s.total*100:0).toFixed(1)+"%";
+    return `<button class="theme" style="--acc:${esc(c.color)}" ${A("course",c.id)}>
+      <div class="row"><span class="name">${esc(c.name)}</span>
+      <span class="due ${s.due?"":"zero"}">${s.due?s.due+" fällig":s.total+" Vokabeln"}</span></div>
+      <div class="sub">${esc(c.from)} → ${esc(c.to)} · ${c.themes.length} ${c.themes.length===1?"Thema":"Themen"}</div>
+      <div class="meter"><i style="width:${w(s.sicher)};background:#2E7D52"></i>
+      <i style="width:${w(s.lern)};background:${esc(c.color)}"></i></div></button>`;
+  }).join("");
+  const all=stats(null);
+  return `<div class="screen">
+    <div class="bar"><h1>Vokabeltrainer</h1>
+      <button class="ghost" ${A("view","data")}>Daten</button>
+      <button class="ghost" ${A("view","settings")}>Einstellungen</button></div>
+    <div class="body">
+      ${banner()}
+      <p class="lead">${all.due} Karten fällig · ${Math.max(0,S.newPerDay-S.newDone)} neue heute frei · ${all.total} insgesamt</p>
+      ${rows||'<p class="lead">Noch kein Kurs — leg unten deine erste Sprache an, oder hol dir unter „Daten“ einen Stand herüber.</p>'}
+      ${rows?`<div class="legend"><b><span class="dot" style="background:#2E7D52"></span>sitzt</b>
+        <b><span class="dot" style="background:#8FA3BC"></span>am Lernen</b>
+        <b><span class="dot" style="background:rgba(255,255,255,.15)"></span>neu</b></div>`:""}
+      <button class="ghost" ${A("courseform")}>+ Neue Sprache</button>
+    </div></div>`;
+}
+
+/* --- Themen eines Kurses --- */
+function courseScreen(){
+  const c=courseById(view.cid);if(!c){view={name:"home"};return home();}
+  const due=cardsOf(c.id).filter(k=>isDue(k.id)).length;
+  const d=dirOf(c);
+  const seg=(v,t)=>`<button class="${d===v?"on":""}" ${A("cdir",c.id,v)}>${esc(t)}</button>`;
+  return `<div class="screen" style="--acc:${esc(c.color)}">
+    <div class="bar"><button class="ghost" ${A("view","home")}>Kurse</button><h1>${esc(c.name)}</h1>
+      <button class="ghost" ${A("courseform",c.id)}>Kurs</button></div>
+    <div class="body">
+      ${banner()}
+      <div class="optrow"><span>Abfragerichtung</span><div class="seg">
+        ${seg("a-b",c.from+" → "+c.to)}${seg("b-a",c.to+" → "+c.from)}${seg("mix","gemischt")}</div></div>
+      <button class="theme" style="--acc:var(--ocre)" ${A("cards",c.id)}>
+        <div class="row"><span class="name">Alle Themen gemischt</span>
+        <span class="due ${due?"":"zero"}">${due?due+" fällig":"nichts fällig"}</span></div></button>
+      <div style="height:14px"></div>
+      ${c.themes.map(t=>{const s=stats(c.id,t.id);const w=x=>(s.total?x/s.total*100:0).toFixed(1)+"%";
+        return `<button class="theme" style="--acc:${esc(t.color)}" ${A("theme",c.id,t.id)}>
+          <div class="row"><span class="name">${esc(t.name)}</span>
+          <span class="due ${s.due?"":"zero"}">${s.due?s.due+" fällig":s.total+" Karten"}</span></div>
+          <div class="meter"><i style="width:${w(s.sicher)};background:#2E7D52"></i>
+          <i style="width:${w(s.lern)};background:${esc(t.color)}"></i></div></button>`}).join("")
+        ||'<p class="lead">Noch keine Themen in diesem Kurs.</p>'}
+      <button class="ghost" ${A("themeform",c.id)}>+ Neues Thema</button>
+    </div></div>`;
+}
+
+/* --- Ein Thema: Lernmodi --- */
+function themeScreen(){
+  const c=courseById(view.cid),t=themeById(view.cid,view.tid);
+  if(!c||!t){view={name:"home"};return home();}
+  const s=stats(c.id,t.id);
+  return `<div class="screen" style="--acc:${esc(t.color)}">
+    <div class="bar"><button class="ghost" ${A("course",c.id)}>Zurück</button><h1>${esc(t.name)}</h1>
+      <button class="ghost" ${A("themeform",c.id,t.id)}>Thema</button></div>
+    <div class="body">
+      ${banner()}
+      <p class="lead">${s.total} Vokabeln · ${s.due} fällig · ${s.sicher} sitzen</p>
+      <div class="modes">
+        <button class="mode" ${A("cards",c.id,t.id)}><b>Karteikarten</b><span>Abfragen mit Bewertung und Wiederholungsplan</span></button>
+        <button class="mode" ${A("ex",c.id,t.id)}><b>Übungen</b><span>10 Aufgaben: Auswahl und freies Eintippen</span></button>
+        <button class="mode" ${A("cloze",c.id,t.id)}><b>Lückentext</b><span>Aus den Beispielsätzen dieses Themas — funktioniert offline</span></button>
+      </div>
+      <button class="ghost" ${A("list",c.id,t.id)}>Vokabeln verwalten (${t.cards.length})</button>
+    </div></div>`;
+}
+
+/* --- Vokabelliste --- */
+function listScreen(){
+  const c=courseById(view.cid),t=themeById(view.cid,view.tid);
+  if(!c||!t){view={name:"home"};return home();}
+  return `<div class="screen" style="--acc:${esc(t.color)}">
+    <div class="bar"><button class="ghost" ${A("theme",c.id,t.id)}>Zurück</button><h1>${esc(t.name)}</h1></div>
+    <div class="body">
+      ${banner()}
+      <div class="rowbtn" style="margin-bottom:14px">
+        <button class="primary slim" ${A("cardform",c.id,t.id)}>+ Vokabel</button>
+        <button class="ghost" ${A("bulk",c.id,t.id)}>Mehrere einfügen</button></div>
+      <ul class="list">${t.cards.map(k=>`<li><span class="de">${esc(k.a)}</span>
+        <span class="es">${esc(k.b)}</span>
+        <button ${A("editcard",c.id+"|"+t.id,k.id)} title="bearbeiten">✎</button></li>`).join("")
+        ||'<p class="lead">Noch keine Vokabeln.</p>'}</ul>
+    </div></div>`;
+}
+
+/* --- Vokabel anlegen / bearbeiten --- */
+function cardForm(){
+  const c=courseById(view.cid),t=themeById(view.cid,view.tid);
+  if(!c||!t){view={name:"home"};return home();}
+  const k=view.cardId?t.cards.find(x=>x.id===view.cardId):{a:"",b:"",ex:""};
+  if(!k){view={name:"list",cid:c.id,tid:t.id};return listScreen();}
+  return `<div class="screen"><div class="bar"><button class="ghost" ${A("list",c.id,t.id)}>Abbrechen</button>
+    <h1>${view.cardId?"Vokabel bearbeiten":"Neue Vokabel"}</h1></div>
+    <div class="body">
+      ${banner()}
+      <div class="field"><label>${esc(c.from)}</label><input class="txt" id="f-a" value="${esc(fv("f-a",k.a))}" autofocus></div>
+      <div class="field"><label>${esc(c.to)}</label><input class="txt" id="f-b" value="${esc(fv("f-b",k.b))}"></div>
+      <div class="field"><label>Beispielsatz (optional — Basis für den Lückentext)</label>
+        <input class="txt" id="f-ex" value="${esc(fv("f-ex",k.ex||""))}"></div>
+      <button class="primary" ${A("savecard",c.id,t.id)}>Speichern</button>
+      ${view.cardId?`<div style="height:10px"></div>
+        <button class="ghost danger" ${A("delcard",c.id+"|"+t.id,view.cardId)}>${view.armed?"Ja, löschen":"Vokabel löschen"}</button>`:""}
+    </div></div>`;
+}
+
+/* --- Mehrere Vokabeln einfügen --- */
+function bulkForm(){
+  const c=courseById(view.cid),t=themeById(view.cid,view.tid);
+  if(!c||!t){view={name:"home"};return home();}
+  return `<div class="screen"><div class="bar"><button class="ghost" ${A("list",c.id,t.id)}>Abbrechen</button>
+    <h1>Mehrere einfügen</h1></div>
+    <div class="body">
+      ${banner()}
+      <p class="lead">Eine Vokabel pro Zeile: <b>${esc(c.from)}</b> und <b>${esc(c.to)}</b>, getrennt durch
+      <b>=</b>, Tab oder Semikolon. Ein Beispielsatz kann als drittes Feld dahinter stehen.</p>
+      <textarea class="txt" id="f-bulk" placeholder="die Frist = el plazo = Hay que entregarlo dentro del plazo.&#10;die freie Stelle = la vacante">${esc(fv("f-bulk",""))}</textarea>
+      <div style="height:12px"></div>
+      <button class="primary" ${A("savebulk",c.id,t.id)}>Einfügen</button>
+    </div></div>`;
+}
+
+/* --- Thema anlegen / bearbeiten --- */
+function themeForm(){
+  const c=courseById(view.cid);if(!c){view={name:"home"};return home();}
+  const t=view.tid?themeById(c.id,view.tid):{name:"",color:COLORS[c.themes.length%COLORS.length],cards:[]};
+  if(!t){view={name:"course",cid:c.id};return courseScreen();}
+  const col=view.color||t.color;
+  return `<div class="screen"><div class="bar"><button class="ghost" ${A("course",c.id)}>Abbrechen</button>
+    <h1>${view.tid?"Thema bearbeiten":"Neues Thema"}</h1></div>
+    <div class="body">
+      ${banner()}
+      <div class="field"><label>Name</label><input class="txt" id="f-name" value="${esc(fv("f-name",t.name))}" placeholder="Reisen & Verkehr" autofocus></div>
+      <div class="field"><label>Farbe</label><div class="swatches">
+        ${COLORS.map(x=>`<button class="sw ${x===col?"on":""}" style="background:${x}" ${A("color",x)}></button>`).join("")}
+      </div></div>
+      <button class="primary" ${A("savetheme",c.id,view.tid||"")}>Speichern</button>
+      ${view.tid?`<div style="height:10px"></div>
+        <button class="ghost danger" ${A("deltheme",c.id,view.tid)}>${view.armed?"Ja, Thema und Vokabeln löschen":"Thema löschen"}</button>`:""}
+    </div></div>`;
+}
+
+/* --- Kurs anlegen / bearbeiten --- */
+function courseForm(){
+  const c=view.cid?courseById(view.cid):{name:"",from:"Deutsch",to:"",color:COLORS[deck.courses.length%COLORS.length],themes:[]};
+  if(!c){view={name:"home"};return home();}
+  const col=view.color||c.color;
+  return `<div class="screen"><div class="bar"><button class="ghost" ${view.cid?A("course",view.cid):A("view","home")}>Abbrechen</button>
+    <h1>${view.cid?"Kurs bearbeiten":"Neue Sprache"}</h1></div>
+    <div class="body">
+      ${banner()}
+      <p class="lead">Ein Kurs ist eine Sprache: eigene Themen, eigene Abfragerichtung.</p>
+      <div class="field"><label>Name des Kurses</label>
+        <input class="txt" id="f-cname" value="${esc(fv("f-cname",c.name))}" placeholder="Italienisch" autofocus></div>
+      <div class="two">
+        <div class="field"><label>Ausgangssprache (Vorderseite)</label>
+          <input class="txt" id="f-from" value="${esc(fv("f-from",c.from))}" placeholder="Deutsch"></div>
+        <div class="field"><label>Zielsprache (Rückseite)</label>
+          <input class="txt" id="f-to" value="${esc(fv("f-to",c.to))}" placeholder="Italienisch"></div>
+      </div>
+      <div class="field"><label>Farbe</label><div class="swatches">
+        ${COLORS.map(x=>`<button class="sw ${x===col?"on":""}" style="background:${x}" ${A("color",x)}></button>`).join("")}
+      </div></div>
+      <button class="primary" ${A("savecourse",view.cid||"")}>Speichern</button>
+      ${view.cid?`<div style="height:10px"></div>
+        <button class="ghost danger" ${A("delcourse",view.cid)}>${view.armed?"Ja, Kurs mit allen Vokabeln löschen":"Kurs löschen"}</button>`:""}
+    </div></div>`;
+}
+
+/* --- Karteikarten --- */
+function study(){
+  const c=sess.queue[0];if(!c)return finish();
+  const set=dirOf(courseById(sess.cid||c.cid));
+  const d=sess.dir||(sess.dir=(set==="mix"?(Math.random()<.5?"a-b":"b-a"):set));
+  const front=d==="a-b"?c.a:bare(c.b), back=d==="a-b"?bare(c.b):c.a;
+  const par=(c.b.match(/\(([^)]*)\)/)||[])[1]||"";
+  const s=st(c.id);
+  const g=(i,cl,tx)=>`<button class="grade ${cl}" ${A("grade",i)}>${tx}<small>${label(preview(s,i))}</small></button>`;
+  return `<div class="screen" style="--acc:${esc(c.acc)}">
+    <div class="progress"><i style="width:${(sess.done/sess.total*100).toFixed(1)}%"></i></div>
+    <div class="bar"><h1>${esc(sess.tid?c.theme:"Alle Themen")}${sess.extra?" · Extrarunde":""}</h1>
+      <span class="count">${sess.done} / ${sess.total}</span>
+      <button class="ghost" ${A("endstudy")}>Ende</button></div>
+    <div class="stage"><div class="tile" ${A("reveal")}>
+      ${sess.shown?`<div class="prompt">${esc(front)}</div><hr><div class="answer">${esc(back)}</div>
+        ${par&&d==="a-b"?`<div class="hint">${esc(par)}</div>`:""}
+        ${c.ex?`<div class="ex">${esc(c.ex)}</div>`:""}`
+        :`<div class="front">${esc(front)}</div><div class="tap">tippen oder Leertaste für die Lösung</div>`}
+    </div></div>
+    <div class="actions">${sess.shown
+      ?`<div class="grades">${g(0,"g0","Nochmal")}${g(1,"g1","Schwer")}${g(2,"g2","Gut")}${g(3,"g3","Einfach")}</div>`
+      :`<button class="reveal" ${A("reveal")}>Lösung zeigen</button>`}</div></div>`;
+}
+function finish(){
+  const back=sess?{cid:sess.cid,tid:sess.tid}:{};
+  return `<div class="screen"><div class="bar"><h1>Fertig</h1></div>
+    <div class="body done"><div class="big">Geschafft</div><p class="lead">Runde abgeschlossen.</p>
+      <div class="stats"><div><b>${sess?sess.answered:0}</b>Antworten</div>
+      <div><b>${sess?sess.total:0}</b>Karten</div>
+      <div><b>${sess?sess.again:0}</b>× nochmal</div></div>
+      <button class="primary slim" ${A(back.tid?"theme":"course",back.cid||"",back.tid||"")}>Zurück</button></div></div>`;
+}
+
+/* --- Übungen --- */
+function exercise(){
+  if(sess.i>=sess.total)return exDone();
+  const q=sess.q,c=q.card;
+  const ask=q.dir==="a-b"?c.a:bare(c.b);
+  const sol=q.dir==="a-b"?bare(c.b):c.a;
+  let bottom="";
+  if(q.type==="mc"){
+    bottom=`<div class="opts">${q.opts.map((o,n)=>{
+      let cl="";
+      if(sess.phase==="feedback")cl=o.id===c.id?"right":(o.id===q.picked?"wrong":"muted");
+      return `<button class="opt ${cl}" ${A("pick",o.id)}><em>${n+1}</em>${esc(o.txt)}</button>`}).join("")}</div>`;
+  }else{
+    bottom=`<input class="txt" id="f-ans" placeholder="auf ${esc(q.dir==="a-b"?courseLang(c,"to"):courseLang(c,"from"))} tippen"
+      value="${esc(q.input)}" ${sess.phase==="feedback"?"disabled":""} autocomplete="off" autocapitalize="none" autofocus>
+      ${sess.phase==="ask"?'<div style="height:10px"></div><button class="primary" '+A("check")+'>Prüfen</button>':""}`;
+  }
+  const fb=sess.phase==="feedback"?`<div class="verdict ${q.ok==="yes"?"ok":q.ok==="near"?"near":"no"}">
+      ${q.ok==="yes"?"Richtig."
+        :q.ok==="near"?`Fast — richtig geschrieben: <b>${esc(sol)}</b>`
+        :`Richtig wäre: <b>${esc(sol)}</b>`}
+      ${c.ex?`<div style="margin-top:6px;font-family:Georgia,serif;font-style:italic;opacity:.9">${esc(c.ex)}</div>`:""}</div>
+      <div style="height:12px"></div><button class="primary" ${A("nextq")}>Weiter</button>`:"";
+  return `<div class="screen" style="--acc:${esc(c.acc)}">
+    <div class="progress"><i style="width:${(sess.i/sess.total*100).toFixed(1)}%"></i></div>
+    <div class="bar"><h1>Übung</h1><span class="count">${sess.i+1} / ${sess.total}</span>
+      <button class="ghost" ${A(sess.tid?"theme":"course",sess.cid||"",sess.tid||"")}>Ende</button></div>
+    <div class="body">
+      <p class="qsub">${q.type==="mc"?"Welche Übersetzung passt?":"Übersetzung eintippen"}</p>
+      <div class="q">${esc(ask)}</div>
+      ${bottom}${fb}
+    </div></div>`;
+}
+function courseLang(card,which){
+  const c=courseById(card.cid);return c?(which==="to"?c.to:c.from):(which==="to"?"Zielsprache":"Deutsch");
+}
+function exDone(){
+  const pct=Math.round(sess.right/sess.total*100);
+  return `<div class="screen"><div class="bar"><h1>Übung beendet</h1></div>
+    <div class="body done"><div class="big">${pct}%</div>
+      <p class="lead">${sess.right} von ${sess.total} richtig.</p>
+      <div class="rowbtn"><button class="primary" ${A("ex",sess.cid||"",sess.tid||"")}>Noch eine Runde</button>
+      <button class="ghost" ${A(sess.tid?"theme":"course",sess.cid||"",sess.tid||"")}>Zurück</button></div>
+    </div></div>`;
+}
+
+/* --- Lückentext --- */
+function cloze(){
+  const t=sess.tid?themeById(sess.cid,sess.tid):null;
+  const head=`<div class="bar"><button class="ghost" ${A(sess.tid?"theme":"course",sess.cid||"",sess.tid||"")}>Zurück</button>
+    <h1>Lückentext</h1></div>`;
+  if(sess.error)return `<div class="screen">${head}<div class="body"><p class="msg">${esc(sess.error)}</p>
+    ${sess.tid?`<button class="ghost" ${A("list",sess.cid,sess.tid)}>Vokabeln bearbeiten</button>`:""}</div></div>`;
+  const gaps=sess.gaps;
+  const text=gaps.map(h=>{
+    const v=sess.vals[h.n]||"";
+    let cl="";
+    if(sess.checked)cl=check(v,h.answer)!=="no"?"right":"wrong";
+    const w=Math.max(80,Math.min(220,String(h.answer).length*12));
+    return `<li>${esc(h.pre)}<input class="gap ${cl}" data-n="${h.n}" value="${esc(v)}"
+      style="width:${w}px" ${sess.checked?"disabled":""} autocomplete="off" autocapitalize="none"
+      spellcheck="false"><span class="cue">(${esc(h.hint)})</span>${esc(h.post)}`
+      +(sess.checked&&cl==="wrong"?` <span class="sol">→ ${esc(h.answer)}</span>`:"")+`</li>`;
+  }).join("");
+  const right=sess.checked?gaps.filter(h=>check(sess.vals[h.n]||"",h.answer)!=="no").length:0;
+  return `<div class="screen" style="--acc:${t?esc(t.color):"var(--ocre)"}">${head}
+    <div class="body">
+      <div class="sheet"><h3>${esc(t?t.name:"Gemischt")}</h3>
+        <p class="hint">Setz die passende Form ein. In Klammern steht die Bedeutung.</p>
+        <ol class="cloze">${text}</ol></div>
+      <div class="bank">${(sess.bank||gaps).map(h=>`<span class="chip">${esc(h.answer)}</span>`).join("")}</div>
+      <div style="height:12px"></div>
+      ${sess.checked
+        ?`<p class="lead">${right} von ${gaps.length} Lücken richtig.</p>
+          <button class="primary" ${A("cloze",sess.cid||"",sess.tid||"")}>Neuer Text</button>`
+        :`<button class="primary" ${A("checkcloze")}>Prüfen</button>`}
+      <p class="note">Die Sätze stammen aus den Beispielsätzen deiner Vokabeln — dafür braucht der Lückentext
+      keine Verbindung. Das Wortfeld zeigt alle gesuchten Formen in zufälliger Reihenfolge.</p>
+    </div></div>`;
+}
+
+/* --- Einstellungen --- */
+function settings(){
+  const seg=(k,v,t)=>`<button class="${S[k]===v?"on":""}" ${A("set",k,String(v))}>${esc(t)}</button>`;
+  return `<div class="screen"><div class="bar"><h1>Einstellungen</h1>
+    <button class="ghost" ${A("view","home")}>Zurück</button></div>
+    <div class="body">
+      ${banner()}
+      <div class="optrow"><span>Neue Karten pro Tag</span><div class="seg">
+        ${[10,15,25,40].map(n=>seg("newPerDay",n,n)).join("")}</div></div>
+      <div class="optrow"><span>Übungen zählen für den Wiederholungsplan</span><div class="seg">
+        ${seg("srsFromExercises",true,"ja")}${seg("srsFromExercises",false,"nein")}</div></div>
+      <div class="optrow"><span>Abfragerichtung für neue Kurse</span><div class="seg">
+        ${seg("dir","a-b","Ausgangs → Ziel")}${seg("dir","b-a","Ziel → Ausgangs")}${seg("dir","mix","gemischt")}</div></div>
+      <p class="note">Die Richtung eines bestehenden Kurses stellst du direkt im Kurs ein.</p>
+      <h2 class="sec">Tastatur</h2>
+      <p class="note" style="margin-top:0"><span class="kbd">Leertaste</span> Lösung zeigen ·
+        <span class="kbd">1</span>–<span class="kbd">4</span> bewerten bzw. Antwort wählen ·
+        <span class="kbd">Enter</span> prüfen und weiter · <span class="kbd">Esc</span> zurück</p>
+      <h2 class="sec">Daten</h2>
+      <button class="ghost" ${A("view","data")}>Export und Import</button>
+      <div style="height:16px"></div>
+      <button class="ghost danger" ${A("reset")}>${view.armed?"Ja, Fortschritt löschen":"Lernfortschritt zurücksetzen"}</button>
+      <p class="note">Vokabeln bleiben erhalten, nur die Intervalle werden zurückgesetzt.</p>
+      <p class="note">Alles liegt lokal in diesem Browser${cloud?" bzw. in der Claude-App":""}.
+      Ohne Export gibt es keine zweite Kopie.</p>
+    </div></div>`;
+}
+
+/* --- Export / Import --- */
+function dataScreen(){
+  const all=stats(null);
+  const what=view.what||"all";
+  const seg=(k,v,t)=>`<button class="${(k==="what"?what:view[k])===v?"on":""}" ${A("dopt",k,String(v))}>${esc(t)}</button>`;
+  const block=view.block||"";
+  const p=view.parsed;
+  return `<div class="screen"><div class="bar"><h1>Daten</h1>
+    <button class="ghost" ${A("view","home")}>Zurück</button></div>
+    <div class="body">
+      ${banner()}
+      <h2 class="sec">Export</h2>
+      <p class="lead">Ein Textblock mit allem, was diese Version kennt. Kopieren, in der anderen Version
+      unter „Daten“ einfügen, importieren — fertig.</p>
+      <div class="optrow"><span>Inhalt</span><div class="seg">
+        ${seg("what","all","Vokabeln + Lernstand")}${seg("what","deck","nur Vokabeln")}${seg("what","prog","nur Lernstand")}</div></div>
+      <div class="rowbtn" style="margin-bottom:12px">
+        <button class="primary slim" ${A("mkexport")}>Block erzeugen</button>
+        <button class="ghost" ${A("copy")}>Kopieren</button>
+        <button class="ghost" ${A("download")}>Als Datei sichern</button></div>
+      <textarea class="txt" id="f-block" spellcheck="false"
+        placeholder="Hier erscheint der Export — oder füge hier einen Block zum Importieren ein.">${esc(block)}</textarea>
+      <p class="note">${block?block.length.toLocaleString("de-DE")+" Zeichen":
+        all.total+" Vokabeln in "+deck.courses.length+(deck.courses.length===1?" Kurs":" Kursen")+
+        " · "+Object.keys(S.cards).length+" gelernte Karten"}</p>
+
+      <h2 class="sec">Import</h2>
+      <p class="lead">Block oben einfügen (oder Datei wählen), dann prüfen. Alte Blöcke der Spanisch-Version
+      werden ebenfalls erkannt.</p>
+      <div class="rowbtn" style="margin-bottom:12px">
+        <button class="primary slim" ${A("inspect")}>Block prüfen</button>
+        <button class="ghost" ${A("pickfile")}>Datei wählen</button>
+        <button class="ghost" ${A("clearblock")}>Feld leeren</button></div>
+      <input type="file" id="f-file" accept=".json,.txt,application/json,text/plain" style="display:none">
+      ${p?`<div class="msg">Gefunden: <b>${p.sum.cards}</b> Vokabeln in <b>${p.sum.courses}</b>
+          ${p.sum.courses===1?"Kurs":"Kursen"}${p.sum.states?`, <b>${p.sum.states}</b> Lernstände`:", kein Lernstand"}.
+          ${p.at?`<br>Exportiert am ${esc(p.at.slice(0,10))} um ${esc(p.at.slice(11,16))} Uhr.`:""}</div>
+        <div class="rowbtn">
+          <button class="primary slim" ${A("import","merge")}>Zusammenführen</button>
+          <button class="ghost danger" ${A("import","replace")}>${view.armed?"Ja, alles ersetzen":"Alles ersetzen"}</button>
+        </div>
+        <p class="note"><b>Zusammenführen</b> behält alles Lokale, ergänzt Neues und übernimmt pro Karte den
+        weiter fortgeschrittenen Lernstand. <b>Ersetzen</b> wirft den hiesigen Stand weg.</p>`:""}
+    </div></div>`;
+}
+
+function render(){
+  const v=view.name;
+  const html=
+    v==="course"?courseScreen():
+    v==="theme"?themeScreen():
+    v==="list"?listScreen():
+    v==="cardform"?cardForm():
+    v==="bulk"?bulkForm():
+    v==="themeform"?themeForm():
+    v==="courseform"?courseForm():
+    v==="study"?(sess&&sess.queue.length?study():finish()):
+    v==="exercise"?exercise():
+    v==="cloze"?cloze():
+    v==="settings"?settings():
+    v==="data"?dataScreen():home();
+  app.innerHTML=html;
+  const f=app.querySelector("[autofocus]");
+  if(f&&v!=="study")try{f.focus()}catch(e){}
+}
+
+/* ==================== Eingaben ==================== */
+const val=id=>{const e=document.getElementById(id);return e?e.value.trim():""};
+const raw=id=>{const e=document.getElementById(id);return e?e.value:""};
+function go(v){view=v;render()}
+function keepBlock(){if(view.name==="data"){const e=document.getElementById("f-block");if(e)view.block=e.value;}}
+function backFrom(cid,tid){return tid?{name:"theme",cid,tid}:(cid?{name:"course",cid}:{name:"home"})}
+
+async function copyText(t){
+  try{await navigator.clipboard.writeText(t);return true}catch(e){}
+  try{
+    const a=document.getElementById("f-block");
+    if(!a)return false;
+    a.focus();a.select();
+    const ok=document.execCommand("copy");
+    return !!ok;
+  }catch(e){return false}
+}
+
+app.addEventListener("click",async e=>{
+  const t=e.target.closest("[data-act]");
+  if(!t)return;
+  const act=t.dataset.act, a=t.dataset.a, b=t.dataset.b;
+  keepBlock();keepForm();
+
+  switch(act){
+    case "view": sess=null; saveProg(true); return go({name:a});
+    case "course": return go(a?{name:"course",cid:a}:{name:"home"});
+    case "theme": return go(backFrom(a,b));
+    case "list": return go({name:"list",cid:a,tid:b});
+    case "cards": sess=null; return startCards(a,b);
+    case "ex": sess=null; return startExercise(a,b);
+    case "cloze": {
+      const r=buildCloze(a,b);
+      sess={mode:"cloze",cid:a,tid:b,vals:{},checked:false,gaps:r.gaps,error:r.error,
+        bank:r.gaps?shuffle(r.gaps):null};
+      return go({name:"cloze"});
+    }
+    case "endstudy": {const back=backFrom(sess&&sess.cid,sess&&sess.tid);sess=null;saveProg(true);return go(back)}
+
+    /* --- Vokabeln --- */
+    case "cardform": return go({name:"cardform",cid:a,tid:b});
+    case "editcard": {const[cid,tid]=a.split("|");return go({name:"cardform",cid,tid,cardId:b})}
+    case "savecard": {
+      const A1=val("f-a"),B1=val("f-b"),ex=val("f-ex");
+      if(!A1||!B1){view.msg="Bitte beide Seiten ausfüllen.";view.bad=true;return render()}
+      const th=themeById(a,b);if(!th)return;
+      if(view.cardId){const k=th.cards.find(x=>x.id===view.cardId);if(k)Object.assign(k,{a:A1,b:B1,ex});}
+      else th.cards.push({id:nid("v"),a:A1,b:B1,ex});
+      await saveDeck();
+      return go({name:"list",cid:a,tid:b});
+    }
+    case "delcard": {
+      if(!view.armed){view.armed=true;return render()}
+      const[cid,tid]=a.split("|");const th=themeById(cid,tid);
+      if(th)th.cards=th.cards.filter(x=>x.id!==b);
+      delete S.cards[b];
+      await saveDeck();saveProg(true);
+      return go({name:"list",cid,tid});
+    }
+    case "bulk": return go({name:"bulk",cid:a,tid:b});
+    case "savebulk": {
+      const th=themeById(a,b);if(!th)return;
+      let n=0;
+      raw("f-bulk").split("\n").forEach(line=>{
+        const p=line.split(/\s*=\s*|\t|\s*;\s*/).map(x=>x.trim()).filter(Boolean);
+        if(p.length>=2){th.cards.push({id:nid("v"),a:p[0],b:p[1],ex:p[2]||""});n++;}
+      });
+      await saveDeck();
+      return go({name:"list",cid:a,tid:b,msg:n?n+(n===1?" Vokabel":" Vokabeln")+" hinzugefügt.":"Keine gültige Zeile gefunden.",bad:!n});
+    }
+
+    /* --- Themen --- */
+    case "themeform": return go({name:"themeform",cid:a,tid:b});
+    case "savetheme": {
+      const name=val("f-name");
+      if(!name){view.msg="Bitte einen Namen eingeben.";view.bad=true;return render()}
+      const c=courseById(a);if(!c)return;
+      const color=view.color||(b?(themeById(a,b)||{}).color:COLORS[c.themes.length%COLORS.length]);
+      if(b){const th=themeById(a,b);if(th)Object.assign(th,{name,color});await saveDeck();return go({name:"theme",cid:a,tid:b})}
+      const id=nid("t");c.themes.push({id,name,color,cards:[]});
+      await saveDeck();
+      return go({name:"list",cid:a,tid:id});
+    }
+    case "deltheme": {
+      if(!view.armed){view.armed=true;return render()}
+      const c=courseById(a);if(!c)return;
+      const th=themeById(a,b);if(th)th.cards.forEach(k=>delete S.cards[k.id]);
+      c.themes=c.themes.filter(x=>x.id!==b);
+      await saveDeck();saveProg(true);
+      return go({name:"course",cid:a,msg:"Thema gelöscht."});
+    }
+
+    /* --- Kurse --- */
+    case "courseform": return go({name:"courseform",cid:a});
+    case "savecourse": {
+      const name=val("f-cname"),from=val("f-from")||"Deutsch",to=val("f-to")||name;
+      if(!name){view.msg="Bitte einen Namen eingeben.";view.bad=true;return render()}
+      if(a){const c=courseById(a);if(c)Object.assign(c,{name,from,to,color:view.color||c.color});
+        await saveDeck();return go({name:"course",cid:a})}
+      const id=nid("k");
+      deck.courses.push({id,name,from,to,color:view.color||COLORS[deck.courses.length%COLORS.length],themes:[]});
+      await saveDeck();
+      return go({name:"course",cid:id,msg:"Kurs angelegt. Leg jetzt ein erstes Thema an."});
+    }
+    case "delcourse": {
+      if(!view.armed){view.armed=true;return render()}
+      const c=courseById(a);
+      if(c)c.themes.forEach(th=>th.cards.forEach(k=>delete S.cards[k.id]));
+      deck.courses=deck.courses.filter(x=>x.id!==a);
+      await saveDeck();saveProg(true);
+      return go({name:"home",msg:"Kurs gelöscht."});
+    }
+    case "color": view.color=a; return render();
+    case "cdir": {
+      const c=courseById(a);if(!c)return;
+      c.dir=b;await saveDeck();return render();
+    }
+
+    /* --- Karteikarten --- */
+    case "reveal": if(sess&&!sess.shown){sess.shown=true;render()} return;
+    case "grade": {
+      if(!sess||!sess.shown)return;
+      const c=sess.queue.shift(),g=+a;
+      apply(c.id,g);sess.answered++;
+      if(g===0){sess.again++;sess.queue.splice(Math.min(3,sess.queue.length),0,c);}else sess.done++;
+      sess.shown=false;sess.dir=null;
+      if(!sess.queue.length)saveProg(true);
+      return render();
+    }
+
+    /* --- Übungen --- */
+    case "pick": {
+      if(!sess||sess.phase!=="ask")return;
+      sess.q.picked=a;
+      return answerEx(a===sess.q.card.id?"yes":"no");
+    }
+    case "check": {
+      if(!sess||sess.phase!=="ask")return;
+      const inp=val("f-ans");if(!inp)return;
+      sess.q.input=inp;
+      const sol=sess.q.dir==="a-b"?sess.q.card.b:sess.q.card.a;
+      return answerEx(check(inp,sol));
+    }
+    case "nextq": {
+      if(!sess)return;
+      sess.i++;if(sess.i<sess.total)nextQ();
+      if(sess.i>=sess.total)saveProg(true);
+      return render();
+    }
+    case "checkcloze": {
+      if(!sess||sess.checked)return;
+      app.querySelectorAll(".gap").forEach(g=>sess.vals[g.dataset.n]=g.value);
+      sess.checked=true;
+      if(S.srsFromExercises)sess.gaps.forEach(h=>apply(h.cardId,check(sess.vals[h.n]||"",h.answer)!=="no"?2:0));
+      saveProg(true);
+      return render();
+    }
+
+    /* --- Einstellungen --- */
+    case "set": {
+      S[a]=b==="true"?true:b==="false"?false:(isNaN(b)?b:+b);
+      saveProg(true);return render();
+    }
+    case "reset": {
+      if(!view.armed){view.armed=true;return render()}
+      S.cards={};S.newDone=0;saveProg(true);
+      return go({name:"settings",msg:"Lernfortschritt zurückgesetzt."});
+    }
+
+    /* --- Export / Import --- */
+    case "dopt": view[a]=b; return render();
+    case "mkexport": {
+      const what=view.what||"all";
+      view.block=what==="prog"
+        ? JSON.stringify({app:APP_ID,format:1,v:MODEL_V,at:new Date().toISOString(),progress:progSnapshot()})
+        : buildExport(what==="all",false);
+      view.msg="Block erzeugt. Jetzt kopieren und in der anderen Version einfügen.";view.bad=false;
+      return render();
+    }
+    case "copy": {
+      const text=raw("f-block");
+      if(!text){view.msg="Erzeuge zuerst einen Block.";view.bad=true;return render()}
+      const ok=await copyText(text);
+      view.msg=ok?"In die Zwischenablage kopiert.":"Kopieren wurde blockiert — markiere den Text im Feld und kopiere ihn von Hand.";
+      view.bad=!ok;return render();
+    }
+    case "download": {
+      const text=raw("f-block");
+      if(!text){view.msg="Erzeuge zuerst einen Block.";view.bad=true;return render()}
+      try{
+        const url=URL.createObjectURL(new Blob([text],{type:"application/json"}));
+        const el=document.createElement("a");
+        el.href=url;el.download="vokabeln-"+today()+".json";
+        document.body.appendChild(el);el.click();el.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),2000);
+        view.msg="Datei gesichert. Falls nichts passiert ist, blockiert die Umgebung Downloads — dann kopieren.";
+        view.bad=false;
+      }catch(err){view.msg="Download nicht möglich — nutze „Kopieren“.";view.bad=true}
+      return render();
+    }
+    case "pickfile": {const f=document.getElementById("f-file");if(f)f.click();return}
+    case "clearblock": view.block="";view.parsed=null;view.msg="";return render();
+    case "inspect": {
+      try{
+        view.parsed=parseBlock(view.block);
+        view.msg="";view.bad=false;view.armed=false;
+      }catch(err){view.parsed=null;view.msg=err.message;view.bad=true}
+      return render();
+    }
+    case "import": {
+      if(!view.parsed){view.msg="Bitte erst „Block prüfen“.";view.bad=true;return render()}
+      if(a==="replace"&&!view.armed){view.armed=true;return render()}
+      const r=applyImport(view.parsed,a);
+      await saveDeck();saveProg(true);
+      const bits=[];
+      if(a==="replace")bits.push("Alles ersetzt: "+r.cards+" Vokabeln, "+r.states+" Lernstände");
+      else{
+        bits.push(r.cards+(r.cards===1?" neue Vokabel":" neue Vokabeln"));
+        if(r.themes)bits.push(r.themes+(r.themes===1?" neues Thema":" neue Themen"));
+        if(r.courses)bits.push(r.courses+(r.courses===1?" neuer Kurs":" neue Kurse"));
+        bits.push(r.states+" Lernstände übernommen");
+        if(r.skipped)bits.push(r.skipped+" ohne passende Vokabel übersprungen");
+      }
+      view={name:"data",what:view.what||"all",msg:bits.join(" · ")+"."};
+      return render();
+    }
+  }
+});
+
+app.addEventListener("change",e=>{
+  if(e.target.id!=="f-file")return;
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    view.block=String(rd.result||"");
+    try{view.parsed=parseBlock(view.block);view.msg="Datei gelesen.";view.bad=false}
+    catch(err){view.parsed=null;view.msg=err.message;view.bad=true}
+    render();
+  };
+  rd.onerror=()=>{view.msg="Die Datei ließ sich nicht lesen.";view.bad=true;render()};
+  rd.readAsText(f);
+});
+
+app.addEventListener("keydown",e=>{
+  if(e.key!=="Enter")return;
+  if(e.target.id==="f-ans"){e.preventDefault();
+    const btn=app.querySelector('[data-act="check"]')||app.querySelector('[data-act="nextq"]');
+    if(btn)btn.click();return;}
+  if(e.target.classList&&e.target.classList.contains("gap")){e.preventDefault();
+    const gaps=[].slice.call(app.querySelectorAll(".gap"));
+    const i=gaps.indexOf(e.target);
+    if(i>=0&&i<gaps.length-1)gaps[i+1].focus();
+    else{const btn=app.querySelector('[data-act="checkcloze"]');if(btn)btn.click();}
+    return;}
+  if(/^f-(a|b|ex|name|cname|from|to)$/.test(e.target.id)){e.preventDefault();
+    const btn=app.querySelector('[data-act^="save"]');if(btn)btn.click();}
+});
+
+document.addEventListener("keydown",e=>{
+  const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
+  if(e.metaKey||e.ctrlKey||e.altKey)return;
+  const hit=sel=>{const b=app.querySelector(sel);if(b){e.preventDefault();b.click();return true}return false};
+  if(view.name==="study"&&sess){
+    if(typing)return;
+    if(e.key===" "||e.key==="Enter")return void hit('[data-act="reveal"]');
+    if(sess.shown&&/^[1-4]$/.test(e.key))return void hit('[data-act="grade"][data-a="'+(+e.key-1)+'"]');
+    if(e.key==="Escape")return void hit('[data-act="endstudy"]');
+  }
+  if(view.name==="exercise"&&sess&&sess.q){
+    if(sess.phase==="ask"&&sess.q.type==="mc"&&/^[1-4]$/.test(e.key)&&!typing){
+      const opts=app.querySelectorAll('[data-act="pick"]');
+      if(opts[+e.key-1]){e.preventDefault();opts[+e.key-1].click()}
+      return;
+    }
+    if(sess.phase==="feedback"&&(e.key===" "||e.key==="Enter")&&!typing)return void hit('[data-act="nextq"]');
+  }
+  if(e.key==="Escape"&&!typing&&/^(list|cardform|bulk|themeform|courseform|settings|data)$/.test(view.name)){
+    const back=app.querySelector(".bar .ghost");if(back){e.preventDefault();back.click()}
+  }
+});
+
+/* ==================== Start ==================== */
+async function boot(){
+  let deckRaw=await store.get(KDECK), progRaw=await store.get(KPROG), migrated=false;
+  if(deckRaw){try{deck=normalizeDeck(JSON.parse(deckRaw))}catch(err){}}
+  if(!deck){
+    const oldDeck=await store.get(OLD_DECK);
+    if(oldDeck){try{deck=normalizeDeck(JSON.parse(oldDeck));migrated=!!deck}catch(err){}}
+  }
+  if(!deck)deck=normalizeDeck(SEED);
+
+  if(progRaw){try{const p=normalizeProg(JSON.parse(progRaw));if(p)Object.assign(S,p)}catch(err){}}
+  else{
+    const oldProg=await store.get(OLD_PROG);
+    if(oldProg){try{const p=normalizeProg(JSON.parse(oldProg));if(p){Object.assign(S,p);migrated=true}}catch(err){}}
+  }
+  if(S.day!==today()){S.day=today();S.newDone=0;}
+
+  try{await store.set(KDECK,JSON.stringify(deck));await store.set(KPROG,JSON.stringify(S))}
+  catch(err){storageNote="Dieser Browser lässt kein Speichern zu — der Stand gilt nur für diese Sitzung. Exportiere ihn, bevor du das Fenster schließt.";}
+
+  view={name:"home"};
+  if(migrated)view.msg="Bestehender Stand aus der alten Spanisch-Version übernommen.";
+  render();
+}
+boot();
+</script>
+</body>
+</html>
