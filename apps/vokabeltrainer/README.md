@@ -26,13 +26,36 @@ holt den Kurs über diesen Weg.
 ## Öffnen
 
 `index.html` im Browser öffnen — per Doppelklick oder Rechtsklick → Öffnen mit.
-Für den Dock/Startmenü-Zugriff die Datei als Lesezeichen ablegen oder in
-Chrome/Edge über „Als App installieren“ ein eigenes Fenster erzeugen.
 
-Der Stand liegt im `localStorage` **dieses** Browsers und dieses Dateipfads.
-Verschiebst du die Datei in einen anderen Ordner, sieht der Browser sie unter
-Umständen als andere Seite und der Stand ist zunächst leer — dann den Export
-von vorher importieren. Deshalb: **regelmäßig exportieren.**
+Für ein eigenes Fenster mit Icon in Dock, Taskleiste oder Startmenü:
+in Chrome oder Edge die Datei öffnen, dann ⋮ → *Speichern und teilen* (in
+älteren Versionen *Weitere Tools*) → **Verknüpfung erstellen…**, Häkchen bei
+*Als Fenster öffnen*. Das Ergebnis startet ohne Adressleiste und lässt sich
+anheften. Ohne Browsermenü geht es auch klassisch: Windows Rechtsklick →
+*Senden an* → *Desktop (Verknüpfung erstellen)*, macOS Rechtsklick →
+*Alias erzeugen* bzw. die Datei in den rechten Bereich des Docks ziehen.
+
+### Woran der Lernstand hängt
+
+Am **Browserprofil**, nicht an der Datei. In Chromium geprüft:
+
+| Situation | Stand vorhanden |
+|---|---|
+| dieselbe Datei erneut geöffnet | ja |
+| Datei verschoben oder umbenannt | ja |
+| Kopie der Datei in einem anderen Ordner | ja |
+| anderer Browser oder anderes Profil | **nein** |
+| über `http://localhost` statt `file://` geöffnet | **nein** |
+
+Die Datei darfst du also verschieben und beim Aktualisieren überschreiben —
+der Stand bleibt. Was ihn verliert: ein anderer Browser, ein zweites
+Browserprofil, ein lokaler Webserver, der private Modus und das Löschen der
+Browserdaten. Deshalb gilt trotzdem: **regelmäßig exportieren.**
+
+Öffne die Datei immer mit demselben Browser. Startet sie einmal in einem
+anderen, wirkt die App leer — die Daten sind nicht weg, sie liegen beim
+anderen Browser. (Firefox und Safari wurden nicht geprüft; sie behandeln
+`file://`-Speicher teils strenger.)
 
 ## Lernen
 
