@@ -174,6 +174,19 @@ die freie Stelle = la vacante
 
 Das dritte Feld (Beispielsatz) ist optional, macht aber den Lückentext möglich.
 
+## Icon
+
+`icon.svg` — zwei Karteikarten auf marineblauem Grund, die vordere cremefarben
+mit einem ockerfarbenen Gleichheitszeichen: das Trennzeichen, mit dem die App
+auch Vokabeln einliest (`die Frist = el plazo`). Farben aus der Oberfläche
+(`#0E2440`, `#F7F5EF`, `#D9A227`).
+
+Das Icon steckt als Data-URI in `index.html` — als SVG für die Adressleiste,
+als 64-px-PNG für Browser ohne SVG-Favicons und als randlose 180-px-Kachel für
+`apple-touch-icon` (iOS legt seine eigene Maske an, deshalb ohne eigene Ecken).
+Dazu `theme-color` und ein Kurzname für den Home-Bildschirm. `icon.svg` ist die
+Quelle; die PNGs entstehen daraus, etwa per Browser-Screenshot.
+
 ## Technik
 
 Eine Datei, kein Build, keine Abhängigkeiten, kein Netzverkehr. Getestet mit
