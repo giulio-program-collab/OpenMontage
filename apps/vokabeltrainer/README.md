@@ -5,8 +5,23 @@ Netzverbindung, keine Konten. Alles läuft im Browser, gespeichert wird lokal.
 
 Die App ist sprachunabhängig: ein **Kurs** ist eine Sprache (mit eigener
 Ausgangs- und Zielsprache und eigener Abfragerichtung), darunter liegen
-**Themen**, darunter die **Vokabeln**. Beim ersten Start ist der Spanisch-Kurs
-mit 332 Vokabeln in neun Themen vorhanden; weitere Sprachen legst du selbst an.
+**Themen**, darunter die **Vokabeln**. Weitere Sprachen legst du selbst an.
+
+Mitgeliefert sind zwei Kurse:
+
+| Kurs | Umfang | Inhalt |
+|---|---|---|
+| Spanisch | 332 Vokabeln, 9 Themen | der bestehende Bestand |
+| Englisch C1–C2 | 1000 Vokabeln, 25 Themen | Fach- und Abstraktwortschatz, Phrasal Verbs, Idiome, Kollokationen, Konnektoren, präzise Adjektive und Verben, falsche Freunde, formelles Register |
+
+Jede englische Vokabel hat einen Beispielsatz; 98 % davon taugen als
+Lückensatz. Verben stehen als `to …` — beim Eintippen zählt beides,
+mit und ohne `to`.
+
+**Der Englisch-Kurs für eine bestehende Installation:** `englisch-c1-c2.json`
+unter **Daten → Datei wählen → Block prüfen → Zusammenführen** einlesen. Der
+Startbestand greift nur beim allerersten Öffnen; wer schon einen Stand hat,
+holt den Kurs über diesen Weg.
 
 ## Öffnen
 
@@ -46,6 +61,11 @@ Drei Umfänge stehen zur Wahl:
 - *nur Lernstand* — nur die Intervalle, wenige hundert Zeichen; ideal, wenn
   beide Seiten dieselben Vokabeln haben und nur der Fortschritt wandern soll
 
+Der vollständige Block ist mit beiden Kursen rund 140 kB groß. Für den
+regelmäßigen Abgleich genügt meist *nur Lernstand* — ein paar hundert Zeichen.
+„Als Datei sichern“ funktioniert lokal wie in der Claude-Version (dort fragt
+die Umgebung vor dem Speichern nach).
+
 **Import** — Block einfügen (oder „Datei wählen“), „Block prüfen“ zeigt an, was
 drinsteckt, danach:
 
@@ -63,6 +83,14 @@ Diese Datei läuft **auch in der Claude-App**: findet sie dort `window.storage`,
 speichert sie darüber, sonst im `localStorage`. Damit sind die Claude-Version
 und die Desktop-Version dieselbe App, und der Stand lässt sich mit demselben
 Textblock in beide Richtungen schieben.
+
+Als Artifact veröffentlicht (gleicher Stand, gleiche Oberfläche):
+<https://claude.ai/code/artifact/a2da5ed2-7d7b-47ce-a0f0-52aaba458d9f>
+
+Die Artifact-Fassung entsteht aus dieser Datei, indem `<!doctype>`, `<html>`,
+`<head>` und `<body>` entfernt werden — `<title>`, `<style>` und der Rumpf
+bleiben unverändert. Dort wird zusätzlich die `downloads`-Fähigkeit deklariert,
+damit „Als Datei sichern“ auch im Artifact funktioniert.
 
 1. In Version A: **Daten → Block erzeugen → Kopieren**
 2. In Version B: **Daten → einfügen → Block prüfen → Zusammenführen**
