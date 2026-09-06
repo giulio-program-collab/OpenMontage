@@ -181,6 +181,10 @@ mit einem ockerfarbenen Gleichheitszeichen: das Trennzeichen, mit dem die App
 auch Vokabeln einliest (`die Frist = el plazo`). Farben aus der Oberfläche
 (`#0E2440`, `#F7F5EF`, `#D9A227`).
 
+Dieselbe Zeichnung steht als Marke links neben dem Titel der Kursübersicht —
+im Artifact nimmt die Plattform fürs Tab-Symbol ausschließlich Emoji (dort 🗂️),
+in der Seite selbst ist das Icon damit trotzdem sichtbar.
+
 Das Icon steckt als Data-URI in `index.html` — als SVG für die Adressleiste,
 als 64-px-PNG für Browser ohne SVG-Favicons und als randlose 180-px-Kachel für
 `apple-touch-icon` (iOS legt seine eigene Maske an, deshalb ohne eigene Ecken).

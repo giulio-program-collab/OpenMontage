@@ -33,6 +33,7 @@ body{margin:0;background:var(--azul-0);color:#EAEFF6;
 }
 .screen{display:flex;flex-direction:column;flex:1;min-height:0}
 .bar{display:flex;align-items:center;gap:8px;padding:13px 14px;border-bottom:1px solid rgba(255,255,255,.09);flex:none}
+svg.mark{width:26px;height:26px;flex:none;display:block}
 .bar h1{font:600 16px/1.25 inherit;margin:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ghost{background:none;border:1px solid rgba(255,255,255,.22);color:#EAEFF6;border-radius:8px;
   padding:7px 11px;font:500 13px inherit;cursor:pointer;white-space:nowrap}
@@ -1593,6 +1594,13 @@ const SEED={"v":3,"courses":[
    Stand lässt sich als Textblock exportieren und importieren.
    ========================================================================= */
 
+/* dieselbe Zeichnung wie das Favicon — als Marke in der Kopfzeile */
+const MARK=("<svg class='mark' viewBox='0 0 64 64' aria-hidden='true'>"+
+  "<rect width='64' height='64' rx='14' fill='%230E2440'/>"+
+  "<rect x='16' y='12' width='37' height='27' rx='4' fill='%23D9A227' transform='rotate(-9 34.5 25.5)'/>"+
+  "<rect x='12' y='19' width='40' height='29' rx='4.5' fill='%23F7F5EF'/>"+
+  "<rect x='22' y='27.5' width='20' height='4.5' rx='2.25' fill='%23D9A227'/>"+
+  "<rect x='22' y='36' width='20' height='4.5' rx='2.25' fill='%23D9A227'/></svg>").replace(/%23/g,"#");
 const APP_ID="vokabeltrainer", MODEL_V=3, DAY=86400000;
 const KDECK="vt.deck.v3", KPROG="vt.prog.v3";
 const OLD_DECK="spanisch-deck-v2", OLD_PROG="spanisch-srs-v2";
@@ -1981,7 +1989,7 @@ function home(){
   }).join("");
   const all=stats(null);
   return `<div class="screen">
-    <div class="bar"><h1>Vokabeltrainer</h1>
+    <div class="bar">${MARK}<h1>Vokabeltrainer</h1>
       <button class="ghost" ${A("view","data")}>Daten</button>
       <button class="ghost" ${A("view","settings")}>Einstellungen</button></div>
     <div class="body">
